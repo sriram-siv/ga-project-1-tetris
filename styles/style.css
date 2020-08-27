@@ -14,3 +14,7 @@ body {
     height: 50px;
     background-color: rgb(140, 196, 252);
 }
+
+.cell-highlight {
+    background-color: darkmagenta;
+}

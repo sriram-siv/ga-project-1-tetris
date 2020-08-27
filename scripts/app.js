@@ -7,7 +7,7 @@ function init() {
   const width = 10
   const height = 15
 
-  let grid = []
+  let grid
   
   const squareBlock = [
     [
@@ -124,8 +124,9 @@ function init() {
   // Objects
 
   class CellInfo {
-    constructor(state) {
-      this.value = state
+    constructor(state = 0, tile = 0) {
+      this.state = state
+      this.tile = tile
     }
   }
 
@@ -136,10 +137,11 @@ function init() {
   }
 
   function creategrid() {
+    grid = []
     for (let i = 0; i < width * height; i++) {
 
       // Create grid for game logic
-      grid.push(0)
+      grid.push(new CellInfo())
 
       // Create cell for display in flex-box
       const cell = document.createElement('div')
@@ -154,9 +156,8 @@ function init() {
     for (let i = 0; i < width * height; i++) {
       const cell = document.querySelector(`[data-id='${i}']`)
 
-      if (grid[i] > 0) {
-        const random = 1//Math.floor(Math.random() * 9)
-        const tilePath = `./images/tile_${random}.png`
+      if (grid[i].state > 0) {
+        const tilePath = `./images/tile_${grid[i].tile}.png`
         cell.style.background = `url(${tilePath})`
         cell.style.backgroundSize = 'contain'
       } else {
@@ -169,12 +170,29 @@ function init() {
   function getBlock() {
     const blocks = [squareBlock, lBlock, jBlock, tBlock, iBlock, sBlock, zBlock]
     const random = Math.floor(Math.random() * blocks.length)
+    const spawnPosition = Math.floor(width / 2 - 1)
+
+    let gameOver = false
+
+    blocks[random][0].forEach((line, yIndex) => {
+      line.forEach((cell, xIndex) => {
+        const cellToCheck = (yIndex * width) + xIndex + spawnPosition
+        if (grid[cellToCheck].state !== 0) {
+          clearInterval(gameTimer)
+          gameOver = true
+        }
+      })
+    })
+
+    if (gameOver) return
 
     // Draw block into starting position
     let drawLine = 0
-    const spawnPosition = Math.floor(width / 2 - 1)
     blocks[random][0].forEach(line => {
-      line.forEach((cell, i) => grid[drawLine + spawnPosition + i] = cell)
+      line.forEach((cell, i) => {
+        grid[drawLine + spawnPosition + i].state = cell
+        grid[drawLine + spawnPosition + i].tile = random
+      })
       // Move to next line of grid after current line is inserted
       drawLine += width
     })
@@ -182,7 +200,7 @@ function init() {
     activeBlock = blocks[random]
     blockRotation = 0
 
-    printBlockState()
+    // printBlockState()
   }
 
   function printBlockState() {
@@ -190,12 +208,16 @@ function init() {
     activeBlock[blockRotation].forEach(line => console.log(line, '\n'))
   }
 
-  // function printGridState() {
-  //   console.clear()
-  //   for (let i = 0; i < height; i++) {
-  //     console.log(grid.slice(i * 10, (i * 10) + 10))
-  //   }
-  // }
+  function printGridState() {
+    console.clear()
+    for (let i = 0; i < height; i++) {
+      let printLine = ''
+      for (let j = 0; j < width; j++) {
+        printLine += grid[(i * width) + j].state
+      }
+      console.log(printLine)
+    }
+  }
 
   function controlBlock(event) {
     switch (event.keyCode) {
@@ -225,10 +247,10 @@ function init() {
     // Check next column is free
     let move = true
     for (let i = 0; i < grid.length; i++) {
-      if (grid[i] === 1 && i % width === touchingEdge) {
+      if (grid[i].state === 1 && i % width === touchingEdge) {
         move = false
       }
-      if (grid[i] === 1 && grid[i + shiftValue] === 2) {
+      if (grid[i].state === 1 && grid[i + shiftValue].state === 2) {
         move = false
       }
     }
@@ -238,16 +260,18 @@ function init() {
       grid = grid.map((cell, i) => {
         
         // Cell is on edge and contains falling block
-        if (grid[i] === 1 && i % width === isEdge) return 0
+        if (grid[i].state === 1 && i % width === isEdge) return new CellInfo()
 
         // Return all other edge cells as normal
         if (i % width === isEdge) return cell
 
         // If cell to side contains falling block return 1
-        if (grid[i - shiftValue] === 1) return 1
+        if (grid[i - shiftValue].state === 1) {
+          return new CellInfo(1, grid[i - shiftValue].tile)
+        }
 
         // All trailing edges of falling block become 0
-        if (grid[i] === 1) return 0
+        if (grid[i].state === 1) return new CellInfo()
 
         // Everything else stays in place
         return cell
@@ -257,6 +281,65 @@ function init() {
 
   function rotateBlock() {
 
+    // Rotate current block
+    blockRotation = (blockRotation + 1) % activeBlock.length
+    
+    // Find grid location of falling block and remove it
+    let blockColor
+    let location = null
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        if (grid[(i * width) + j].state === 1) {
+          location = location === null ? [ j, i ] : location
+          blockColor = grid[(i * width) + j].tile
+          grid[(i * width) + j] = new CellInfo()
+        }
+      }
+    }
+
+    // Shift location if it would collide with a boundary or block
+    
+    let validMove = false
+    while (!validMove) {
+      validMove = true
+      
+      activeBlock[blockRotation].forEach((line, yIndex) => {
+        line.forEach((cell, xIndex) => {
+          if (cell !== 1) return
+
+          const cellToCheck = ((location[1] + yIndex) * width) + (location[0] + xIndex)
+
+          // If the cell to place in is occupied by another block, shift the position up
+          if (grid[cellToCheck].state === 2) {
+            location[1]--
+            validMove = false
+          }
+          
+          // If the cell is a boundary shift laterally
+          if (location[0] + xIndex > 9) {
+            location[0]--
+            validMove = false
+          }
+          
+        })
+      })
+    }
+
+    // Return if no falling block found 
+    if (location === null) return
+
+    printGridState()
+    
+    // Redraw block to grid
+    activeBlock[blockRotation].forEach(line => {
+        
+      line.forEach((cell, index) => {
+        if (cell === 1) {
+          grid[(location[1] * 10) + location[0] + index] = new CellInfo(1, blockColor)
+        }
+      })
+      location[1]++
+    })
   }
 
   function dropBlocks() {
@@ -265,7 +348,7 @@ function init() {
     let fall = true
     for (let i = 0; i < grid.length; i++) {
 
-      if (grid[i] === 1 && (grid[i + width] === undefined || grid[i + width] === 2)) {
+      if (grid[i].state === 1 && (grid[i + width] === undefined || grid[i + width].state === 2)) {
         fall = false
       }
 
@@ -275,39 +358,40 @@ function init() {
     if (fall) {
       grid = grid.map((cell, i) => {
 
-        if (grid[i - width] === 1) {
-          return 1
+        if (grid[i - width] === undefined) return new CellInfo()
+
+        if (grid[i - width].state === 1) {
+          return new CellInfo(1, grid[i - width].tile)
         }
-        if (cell === 2) {
-          return 2
+        if (cell.state === 2) {
+          return cell
         }
-        return 0
+        return new CellInfo()
       })
     } else {
       // Solidify cells by turning 1 => 2
-      grid = grid.map(cell => cell === 1 ? 2 : cell)
+      grid = grid.map((cell) => {
+        return cell.state === 1 ? new CellInfo(2, cell.tile) : cell
+      })
       
 
       // Generate new block
       getBlock()
 
       // Print grid to console
-      // printGridState()
+      printGridState()
     }
   }
 
   
   
   
-  
   // Initialise starting state
   creategrid()
   getBlock()
-
+  
   // Start movement
-  setInterval(() => {
-    dropBlocks()
-  }, 500)
+  const gameTimer = setInterval(dropBlocks, 500)
 
   // Define draw speed
   setInterval(drawGrid, 20)
