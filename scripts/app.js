@@ -9,7 +9,6 @@ function init() {
 
   let grid = []
   
-
   const squareBlock = [
     [
       [1, 1],
@@ -119,6 +118,17 @@ function init() {
     ]
   ]
 
+  let activeBlock = null
+  let blockRotation = 0
+
+  // Objects
+
+  class CellInfo {
+    constructor(state) {
+      this.value = state
+    }
+  }
+
   // Functions
 
   function clickCell(event) {
@@ -162,20 +172,23 @@ function init() {
 
     // Draw block into starting position
     let drawLine = 0
+    const spawnPosition = Math.floor(width / 2 - 1)
     blocks[random][0].forEach(line => {
-
-      line.forEach((cell, i) => grid[drawLine + i] = cell)
-
+      line.forEach((cell, i) => grid[drawLine + spawnPosition + i] = cell)
+      // Move to next line of grid after current line is inserted
       drawLine += width
     })
-    
-    return blocks[random]
+
+    activeBlock = blocks[random]
+    blockRotation = 0
+
+    printBlockState()
   }
 
-  // function printBlockState() {
-  //   console.clear()
-  //   currentBlock[rotation].forEach(line => console.log(line, '\n'))
-  // }
+  function printBlockState() {
+    console.clear()
+    activeBlock[blockRotation].forEach(line => console.log(line, '\n'))
+  }
 
   // function printGridState() {
   //   console.clear()
@@ -190,7 +203,7 @@ function init() {
         moveBlock('left')
         break
       case 38:
-        // rotation += currentBlock.length - 1
+        rotateBlock()
         break
       case 39:
         moveBlock('right')
@@ -240,6 +253,10 @@ function init() {
         return cell
       })
     }
+  }
+
+  function rotateBlock() {
+
   }
 
   function dropBlocks() {
