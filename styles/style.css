@@ -1,16 +1,25 @@
 body {
-    background-color: black;
+    background-color: #010;
+    font-family: 'Orbitron', sans-serif;
 }
 
 .grid {
     display: flex;
     flex-wrap: wrap;
-    width: 500px;
+    width: 49vh;
     margin: auto;
 }
 
 .cell {
-    width: 50px;
-    height: 50px;
-    background-color: paleturquoise;
+    width: 4.9vh;
+    height: 4.9vh;
+    background-color: #222;
+}
+
+.info {
+    position: absolute;
+    top: 0;
+    left: calc(50vw + 27vh);
+    color: white;
+    font-size: 2em;
 }

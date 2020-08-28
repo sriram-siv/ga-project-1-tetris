@@ -2,10 +2,11 @@ function init() {
   
   // Elements
   const gridDiv = document.querySelector('.grid')
+  const levelDisplay = document.querySelector('#level-display')
 
   // Variables
   const width = 10
-  const height = 15
+  const height = 20
 
   let grid
 
@@ -80,15 +81,22 @@ function init() {
 
   const colors = [ 'Yellow', 'Orange', 'DodgerBlue', 'LimeGreen', 'Red', 'MediumPurple', 'DarkTurquoise' ]
 
+  const speeds = [1000, 794, 617, 472, 355, 262, 190, 135, 94, 64]
+
+  let nextBlock = null
   let activeBlock = null
   let blockId = null
   let blockRotation = 0
   let clearing = false
+  let fall = true
+
+  let lines = 0
 
   // Objects
 
   class CellInfo {
     constructor(state = 0, tile = 0) {
+      // States : 0: empty, 1 falling , 2: set, 3: move on clear
       this.state = state
       this.tile = tile
     }
@@ -151,13 +159,16 @@ function init() {
     }
   }
 
-  function getBlock() {
-    const random = Math.floor(Math.random() * blocks.length)
+
+  function spawnBlock() {
+
     const spawnPosition = Math.floor(width / 2 - 1)
 
     let gameOver = false
 
-    blocks[random].forEach((line, yIndex) => {
+    activeBlock = blocks[nextBlock]
+
+    activeBlock.forEach((line, yIndex) => {
       line.forEach((cell, xIndex) => {
         const cellToCheck = (yIndex * width) + xIndex + spawnPosition
         if (grid[cellToCheck].state !== 0) {
@@ -171,18 +182,20 @@ function init() {
 
     // Draw block into starting position
     let drawLine = 0
-    blocks[random].forEach(line => {
+    activeBlock.forEach(line => {
       line.forEach((cell, i) => {
         grid[drawLine + spawnPosition + i].state = cell
-        grid[drawLine + spawnPosition + i].tile = random
+        grid[drawLine + spawnPosition + i].tile = nextBlock
       })
       // Move to next line of grid after current line is inserted
       drawLine += width
     })
 
-    activeBlock = blocks[random]
+    blockId = nextBlock
     blockRotation = 0
-    blockId = random
+
+    nextBlock = Math.floor(Math.random() * blocks.length)
+
 
     // printBlockState()
   }
@@ -210,7 +223,7 @@ function init() {
         moveBlock('left')
         break
       case 38:
-        // TODO bank block
+        while (fall) dropBlocks()
         break
       case 39:
         moveBlock('right')
@@ -297,12 +310,8 @@ function init() {
     if (location === null) return
 
     // Apply pivot point calculation unless it would move out of bounds
-    if (location[0] % width !== 0) {
-      location[0] -= pivotPoint[0]
-    }
-    if (location[1] !== 0) {
-      location[1] -= pivotPoint[1]
-    }
+    location[0] = Math.max(0, location[0] - pivotPoint[0])
+    location[1] = Math.max(0, location[1] - pivotPoint[1])
 
     
     // Shift location if it would collide with a boundary or block
@@ -349,7 +358,7 @@ function init() {
   function dropBlocks() {
 
     // Is the next line free
-    let fall = true
+    fall = true
     for (let i = 0; i < grid.length; i++) {
       // Find falling blocks (normal or in clearing process) that are blocked below
       if ((grid[i].state === 1 || grid[i].state === 3 ) && (grid[i + width] === undefined || grid[i + width].state === 2)) {
@@ -394,7 +403,7 @@ function init() {
       clearLines()
 
       // Generate new block
-      if (!clearing) getBlock()
+      if (!clearing) spawnBlock()
       clearing = false
 
       // Print grid to console
@@ -426,6 +435,16 @@ function init() {
         })
 
         dropBlocks()
+
+        lines++
+        if (lines % 10 === 0) {
+
+          const level = Math.min(lines / 10, speeds.length - 1)
+          levelDisplay.innerHTML = level
+
+          clearInterval(gameTimer)
+          gameTimer = setInterval(dropBlocks, speeds[level])
+        }
       }
     }
 
@@ -438,10 +457,11 @@ function init() {
   
   // Initialise starting state
   creategrid()
-  getBlock()
+  nextBlock = Math.floor(Math.random() * blocks.length)
+  spawnBlock()
   
   // Start movement
-  const gameTimer = setInterval(dropBlocks, 500)
+  let gameTimer = setInterval(dropBlocks, 1000)
 
   // Define draw speed
   setInterval(drawGrid, 20)
