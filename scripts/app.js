@@ -136,6 +136,25 @@ function init() {
     console.log(event.target.getAttribute('data-id'))
   }
 
+  function rotateArray(array, direction = 1) {
+
+    const result = []
+  
+    for (let i = 0; i < array[0].length; i++) {
+      result.push([])
+      for (let j = 0; j < array.length; j++) {
+        result[i].unshift(array[j][i])
+      }
+    }
+  
+    if (direction === -1) {
+      result.forEach(line => line.reverse())
+      result.reverse()
+    }
+  
+    return result
+  }
+
   function creategrid() {
     grid = []
     for (let i = 0; i < width * height; i++) {
@@ -197,15 +216,15 @@ function init() {
       drawLine += width
     })
 
-    activeBlock = blocks[random]
+    activeBlock = blocks[random][0] //*reverseArray
     blockRotation = 0
 
     // printBlockState()
   }
 
   function printBlockState() {
-    console.clear()
-    activeBlock[blockRotation].forEach(line => console.log(line, '\n'))
+    // console.clear()
+    activeBlock.forEach(line => console.log(line, '\n')) //*reverseArray
   }
 
   function printGridState() {
@@ -225,13 +244,19 @@ function init() {
         moveBlock('left')
         break
       case 38:
-        rotateBlock()
+        // TODO bank block
         break
       case 39:
         moveBlock('right')
         break
       case 40:
         dropBlocks()
+        break
+      case 88:
+        rotateBlock(1)
+        break
+      case 90:
+        rotateBlock(-1)
         break
       default:
     }
@@ -279,10 +304,17 @@ function init() {
     }
   }
 
-  function rotateBlock() {
+  function rotateBlock(direction) {
+
+    // Test new method
+    activeBlock = rotateArray(activeBlock, direction)
+    activeBlock.forEach(line => console.log(line))
+
 
     // Rotate current block
-    blockRotation = (blockRotation + 1) % activeBlock.length
+    blockRotation = (blockRotation + 1) % 4 //activeBlock.length *reverseArray
+
+
     
     // Find grid location of falling block and remove it
     let blockColor
@@ -297,13 +329,16 @@ function init() {
       }
     }
 
-    // Shift location if it would collide with a boundary or block
+    // Return if no falling block found 
+    if (location === null) return
+
     
+    // Shift location if it would collide with a boundary or block
     let validMove = false
     while (!validMove) {
       validMove = true
       
-      activeBlock[blockRotation].forEach((line, yIndex) => {
+      activeBlock.forEach((line, yIndex) => { //*reverseArray
         line.forEach((cell, xIndex) => {
           if (cell !== 1) return
 
@@ -325,13 +360,10 @@ function init() {
       })
     }
 
-    // Return if no falling block found 
-    if (location === null) return
-
-    printGridState()
+    // printGridState()
     
     // Redraw block to grid
-    activeBlock[blockRotation].forEach(line => {
+    activeBlock.forEach(line => { //*reverseArray
         
       line.forEach((cell, index) => {
         if (cell === 1) {
@@ -379,8 +411,35 @@ function init() {
       getBlock()
 
       // Print grid to console
-      printGridState()
+      // printGridState()
+
+      clearLines()
     }
+  }
+
+  function clearLines() {
+
+    // Cycle through each horizontal line of the grid
+    for (let i = 0; i < height; i++) {
+
+      // Check if all cells have a state of 2
+      const line = grid.slice(i * width, (i + 1) * width).map(cell => cell.state)
+      const clear = line.every(cell => cell === 2)
+
+      // Remove line from grid and move all others down
+      if (clear) {
+        for (let j = i * width; j < (i + 1) * width; j++) {
+          grid[j] = new CellInfo()
+        }
+        // grid.map((cell, i) => {
+        //   if (grid[i].state === 2) grid[i].state = 1
+        // })
+        // dropBlocks()
+      }
+    }
+
+
+
   }
 
   
