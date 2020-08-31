@@ -2,7 +2,9 @@ function init() {
   
   // Elements
   const gridDiv = document.querySelector('.grid')
+  const previewCells = document.querySelectorAll('.preview-cell')
   const levelDisplay = document.querySelector('#level-display')
+  const scoreDisplay = document.querySelector('#score-display')
 
   // Variables
   const width = 10
@@ -12,6 +14,7 @@ function init() {
 
   const blocks = [
     [
+      // TODO fix this so it displays in preview
       [1, 1],
       [1, 1]
     ],
@@ -51,6 +54,7 @@ function init() {
   const pivots = [
     [
       // Square
+      // TODO fix this pivot point
       [0, 0], [0, 0], [0, 0], [0, 0]
     ],
     [
@@ -90,7 +94,10 @@ function init() {
   let clearing = false
   let fall = true
 
+  let score = 0
   let lines = 0
+  let consecutiveLines = 0
+  let level = 1
 
   // Objects
 
@@ -154,6 +161,7 @@ function init() {
         cell.style.backgroundSize = 'contain'
       } else {
         cell.style.background = ''
+        cell.style.boxShadow = ''
       }
 
     }
@@ -195,6 +203,24 @@ function init() {
     blockRotation = 0
 
     nextBlock = Math.floor(Math.random() * blocks.length)
+
+    
+    // Get block width and create a centering value for the preview window
+    const blockSize = blocks[nextBlock].length
+    document.querySelector('.preview').style.marginLeft = blockSize === 4 ? '' : '2.4vh'
+    
+    // Draw preview
+    previewCells.forEach(cell => cell.style.backgroundColor = '#010')
+    previewCells.forEach(cell => cell.style.boxShadow = '')
+    for (let i = 0; i < blockSize; i++) {
+      for (let j = 0; j < blockSize; j++) {
+        
+        if (blocks[nextBlock][i][j] === 1) {
+          previewCells[i * 4 + j].style.backgroundColor = colors[nextBlock]
+          previewCells[i * 4 + j].style.boxShadow = '2px 2px #222 inset'
+        }
+      }
+    }
 
 
     // printBlockState()
@@ -434,22 +460,32 @@ function init() {
           if (grid[index].state === 2 && index < i * width) grid[index].state = 3
         })
 
-        dropBlocks()
-
+        addScore()
         lines++
         if (lines % 10 === 0) {
-
-          const level = Math.min(lines / 10, speeds.length - 1)
+          
+          level = Math.min(10, level + 1)
           levelDisplay.innerHTML = level
-
+          
           clearInterval(gameTimer)
           gameTimer = setInterval(dropBlocks, speeds[level])
         }
+
+        consecutiveLines = (consecutiveLines + 1) % 4
+        dropBlocks()
       }
     }
 
+    consecutiveLines = 0
 
+  }
 
+  function addScore() {
+    const base = level * 40
+    const multiplier = [1, 1.5, 3, 9][consecutiveLines]
+
+    score += base * multiplier
+    scoreDisplay.innerHTML = score
   }
 
   

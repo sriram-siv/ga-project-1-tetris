@@ -6,14 +6,16 @@ body {
 .grid {
     display: flex;
     flex-wrap: wrap;
-    width: 49vh;
+    width: 48vh;
+    padding-top: 0.5vh;
     margin: auto;
 }
 
 .cell {
-    width: 4.9vh;
-    height: 4.9vh;
+    width: 4.8vh;
+    height: 4.8vh;
     background-color: #222;
+    box-shadow: 2px 2px #222 inset;
 }
 
 .info {
@@ -21,5 +23,17 @@ body {
     top: 0;
     left: calc(50vw + 27vh);
     color: white;
-    font-size: 2em;
+    font-size: 1.5em;
+}
+
+.preview {
+    display: flex;
+    flex-wrap: wrap;
+    width: 19.2vh;
+    height: 19.2vh;
+}
+
+.preview-cell {
+    width: 4.8vh;
+    height: 4.8vh;
 }
