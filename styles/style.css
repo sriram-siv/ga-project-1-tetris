@@ -3,6 +3,31 @@ body {
     font-family: 'Orbitron', sans-serif;
 }
 
+.start-screen {
+    margin: auto;
+    width: 48vh;
+    height: 96vh;
+    padding-top: 0.5vh;
+    background-color: #222;
+}
+
+#logo {
+    width: 48vh;
+}
+
+.start-button {
+    display: block;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1em;
+    background-color: #222;
+    color: #aaa;
+    margin: auto;
+}
+
+.game {
+    display: none;
+}
+
 .grid {
     display: flex;
     flex-wrap: wrap;
@@ -15,7 +40,7 @@ body {
     width: 4.8vh;
     height: 4.8vh;
     background-color: #222;
-    box-shadow: 2px 2px #222 inset;
+    /* box-shadow: 2px 2px #222 inset; */
 }
 
 .info {
@@ -26,14 +51,14 @@ body {
     font-size: 1.5em;
 }
 
-.preview {
+.preview, .hold {
     display: flex;
     flex-wrap: wrap;
     width: 19.2vh;
     height: 19.2vh;
 }
 
-.preview-cell {
+.preview-cell, .hold-cell {
     width: 4.8vh;
     height: 4.8vh;
 }

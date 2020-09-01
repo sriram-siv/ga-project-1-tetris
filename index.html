@@ -9,28 +9,58 @@
     <title>Tetris</title>
 </head>
 <body>
-    <div class='grid'></div>
-    <div class='info'>
-        <p>score : <span id='score-display'>0</span></p>
-        <p>level : <span id='level-display'>0</span></p>
-        <div class='preview'>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
-            <div class='preview-cell'></div>
+    <audio id='bgm' src='./sounds/bg_music.m4a' loop></audio>
+    <audio id='sfx'></audio>
+    <div class='game'>
+        <div class='grid'></div>
+        <div class='info'>
+            <p>SCORE : <span id='score-display'>0</span></p>
+            <p>LEVEL : <span id='level-display'>0</span></p>
+            <br>
+            <p>NEXT :</p>
+            <div class='preview'>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+                <div class='preview-cell'></div>
+            </div>
+            <br>
+            <p>HOLD :</p>
+            <div class='hold'>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+                <div class='hold-cell'></div>
+            </div>
         </div>
+    </div>
+    <div class='start-screen'>
+        <img id='logo' src="./images/logo.png" alt="tetris logo">
+        <button class='start-button'>START</button>
     </div>
 </body>
 </html>

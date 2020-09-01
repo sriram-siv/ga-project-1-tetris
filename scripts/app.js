@@ -3,8 +3,12 @@ function init() {
   // Elements
   const gridDiv = document.querySelector('.grid')
   const previewCells = document.querySelectorAll('.preview-cell')
+  const holdCells = document.querySelectorAll('.hold-cell')
   const levelDisplay = document.querySelector('#level-display')
   const scoreDisplay = document.querySelector('#score-display')
+
+  const bgm = document.querySelector('#bgm')
+  const sfx = document.querySelector('#sfx')
 
   // Variables
   const width = 10
@@ -90,6 +94,7 @@ function init() {
   let nextBlock = null
   let activeBlock = null
   let blockId = null
+  let holdBlock = null
   let blockRotation = 0
   let clearing = false
   let fall = true
@@ -98,6 +103,8 @@ function init() {
   let lines = 0
   let consecutiveLines = 0
   let level = 1
+
+  let gameTimer
 
   // Objects
 
@@ -110,6 +117,23 @@ function init() {
   }
 
   // Functions
+
+  // function printBlockState() {
+  //   // console.clear()
+  //   activeBlock.forEach(line => console.log(line, '\n')) //*reverseArray
+  // }
+
+  // function printGridState() {
+  //   console.clear()
+  //   for (let i = 0; i < height; i++) {
+  //     let printLine = ''
+  //     for (let j = 0; j < width; j++) {
+  //       printLine += grid[(i * width) + j].state
+  //     }
+  //     console.log(printLine)
+  //   }
+  // }
+
 
   function clickCell(event) {
     console.log(event.target.getAttribute('data-id'))
@@ -155,10 +179,10 @@ function init() {
       const cell = document.querySelector(`[data-id='${i}']`)
 
       if (grid[i].state > 0) {
-        // const tilePath = `./images/tile_${grid[i].tile}.png`
-        // cell.style.background = `url(${tilePath})`
-        cell.style.backgroundColor = colors[grid[i].tile]
-        cell.style.backgroundSize = 'contain'
+        const tilePath = `./images/tile_${grid[i].tile}.png`
+        cell.style.background = `url(${tilePath})`
+        // cell.style.backgroundColor = colors[grid[i].tile]
+        cell.style.backgroundSize = 'cover'
       } else {
         cell.style.background = ''
         cell.style.boxShadow = ''
@@ -204,49 +228,63 @@ function init() {
 
     nextBlock = Math.floor(Math.random() * blocks.length)
 
+    drawPreviews()
     
+  }
+
+  function drawPreviews() {
     // Get block width and create a centering value for the preview window
-    const blockSize = blocks[nextBlock].length
+    let blockSize = blocks[nextBlock].length
     document.querySelector('.preview').style.marginLeft = blockSize === 4 ? '' : '2.4vh'
-    
+
     // Draw preview
-    previewCells.forEach(cell => cell.style.backgroundColor = '#010')
-    previewCells.forEach(cell => cell.style.boxShadow = '')
+    // previewCells.forEach(cell => cell.style.backgroundColor = '#010')
+    // previewCells.forEach(cell => cell.style.boxShadow = '')
+    previewCells.forEach(cell => cell.style.background = '')
     for (let i = 0; i < blockSize; i++) {
       for (let j = 0; j < blockSize; j++) {
         
         if (blocks[nextBlock][i][j] === 1) {
-          previewCells[i * 4 + j].style.backgroundColor = colors[nextBlock]
-          previewCells[i * 4 + j].style.boxShadow = '2px 2px #222 inset'
+          // previewCells[i * 4 + j].style.backgroundColor = colors[nextBlock]
+          // previewCells[i * 4 + j].style.boxShadow = '2px 2px #222 inset'
+          const tilePath = `./images/tile_${nextBlock}.png`
+          previewCells[i * 4 + j].style.background = `url(${tilePath})`
+          previewCells[i * 4 + j].style.backgroundSize = 'cover'
         }
       }
     }
 
+    if (holdBlock !== null) {
+      console.log(holdBlock)
 
-    // printBlockState()
+      blockSize = blocks[holdBlock].length
+      document.querySelector('.hold').style.marginLeft = blockSize === 4 ? '' : '2.4vh'
+
+      // Draw hold
+      // holdCells.forEach(cell => cell.style.backgroundColor = '#010')
+      // holdCells.forEach(cell => cell.style.boxShadow = '')
+      holdCells.forEach(cell => cell.style.background = '')
+      for (let i = 0; i < blockSize; i++) {
+        for (let j = 0; j < blockSize; j++) {
+          
+          if (blocks[holdBlock][i][j] === 1) {
+            // holdCells[i * 4 + j].style.backgroundColor = colors[holdBlock]
+            // holdCells[i * 4 + j].style.boxShadow = '2px 2px #222 inset'
+            const tilePath = `./images/tile_${holdBlock}.png`
+            holdCells[i * 4 + j].style.background = `url(${tilePath})`
+            holdCells[i * 4 + j].style.backgroundSize = 'cover'
+          }
+        }
+      }
+    }
   }
 
-  // function printBlockState() {
-  //   // console.clear()
-  //   activeBlock.forEach(line => console.log(line, '\n')) //*reverseArray
-  // }
-
-  // function printGridState() {
-  //   console.clear()
-  //   for (let i = 0; i < height; i++) {
-  //     let printLine = ''
-  //     for (let j = 0; j < width; j++) {
-  //       printLine += grid[(i * width) + j].state
-  //     }
-  //     console.log(printLine)
-  //   }
-  // }
-
+  
   function controlBlock(event) {
 
     switch (event.keyCode) {
       case 16:
-        // hold
+        hold()
         break
       case 37:
         moveBlock('left')
@@ -313,26 +351,14 @@ function init() {
     }
   }
 
-  function redrawBlock() {
-    
-  }
-
-  function rotateBlock(direction) {
-
-    
-    // Rotate current block
-    const pivotPoint = pivots[blockId][blockRotation]
-    activeBlock = rotateArray(activeBlock, direction)
-    blockRotation = (blockRotation + 1) % 4
+  function redrawBlock(pivotPoint) {
     
     // Find grid location of falling block and remove it
-    let blockColor
     let location = null
     for (let i = 0; i < height; i++) {
       for (let j = 0; j < width; j++) {
         if (grid[(i * width) + j].state === 1) {
           location = location === null ? [ j, i ] : location
-          blockColor = grid[(i * width) + j].tile
           grid[(i * width) + j] = new CellInfo()
         }
       }
@@ -378,22 +404,48 @@ function init() {
         
       line.forEach((cell, index) => {
         if (cell === 1) {
-          grid[(location[1] * width) + location[0] + index] = new CellInfo(1, blockColor)
+          grid[(location[1] * width) + location[0] + index] = new CellInfo(1, blockId)
         }
       })
       location[1]++
     })
   }
 
-  function holdBlock() {
+  function rotateBlock(direction) {
+    
+    const pivotPoint = pivots[blockId][blockRotation]
+    activeBlock = rotateArray(activeBlock, direction)
+    blockRotation = (blockRotation + 1) % 4
+
+    redrawBlock(pivotPoint)
+
+    sfx.src = './sounds/rotate.ogg'
+    sfx.play()
+  }
+
+  function hold() {
 
     // Shuffle blocks in memory
-    const hold = blockId
-    blockId = nextBlock
-    nextBlock = blockId
-    blockRotation = 0
+    const pivotPoint = pivots[blockId][blockRotation]
+    const swap = blockId
 
-    // Delete and redraw block
+    if (holdBlock === null) {
+      blockId = nextBlock
+      nextBlock = Math.floor(Math.random() * blocks.length)
+      holdBlock = swap
+    } else {
+      blockId = holdBlock
+      holdBlock = swap
+    }
+
+    blockRotation = 0
+    activeBlock = blocks[blockId]
+
+    redrawBlock(pivotPoint)
+    drawPreviews()
+
+    sfx.src = './sounds/hold.ogg'
+    sfx.play()
   }
 
   function dropBlocks() {
@@ -433,6 +485,12 @@ function init() {
         return new CellInfo()
       })
     } else {
+
+      // Sound effect
+      if (!clearing) {
+        sfx.src = './sounds/lock.ogg'
+        sfx.play()
+      }
 
       // Solidify cells by turning state => 2
       grid = grid.map((cell) => {
@@ -481,14 +539,27 @@ function init() {
           
           level = Math.min(9, level + 1)
           levelDisplay.innerHTML = level
+
+          bgm.playbackRate = 1 + (level * 0.01)
+          bgm.loop = true
           
           clearInterval(gameTimer)
           gameTimer = setInterval(dropBlocks, speeds[level])
         }
 
-        consecutiveLines = (consecutiveLines + 1) % 4
-        dropBlocks()
+        const dropDelay = consecutiveLines === 0 ? 200 : 0
+        consecutiveLines++
+
+        setTimeout(dropBlocks, dropDelay)
       }
+    }
+
+    if (consecutiveLines === 4) {
+      sfx.src = './sounds/tetris.ogg'
+      sfx.play()
+    } else if (consecutiveLines > 0) {
+      sfx.src = './sounds/line_clear.ogg'
+      sfx.play()
     }
 
     consecutiveLines = 0
@@ -503,22 +574,35 @@ function init() {
     scoreDisplay.innerHTML = score
   }
 
-  
-  
-  
-  // Initialise starting state
-  creategrid()
-  nextBlock = Math.floor(Math.random() * blocks.length)
-  spawnBlock()
-  
-  // Start movement
-  let gameTimer = setInterval(dropBlocks, 1000)
 
-  // Define draw speed
-  setInterval(drawGrid, 20)
+  function startGame() {
+
+    document.querySelector('.start-screen').style.display = 'none'
+    document.querySelector('.game').style.display = 'block'
+    
+    bgm.play()
+
+    // Initialise starting state
+    creategrid()
+    nextBlock = Math.floor(Math.random() * blocks.length)
+    spawnBlock()
+    
+    // Start movement
+    gameTimer = setInterval(dropBlocks, 1000)
+
+    // Define draw speed
+    setInterval(drawGrid, 20)
+  }
+
+  
+  
+  
+  
 
   // Attach controls
   document.addEventListener('keydown', controlBlock)
+
+  document.querySelector('.start-button').addEventListener('click', startGame)
 }
 
 window.addEventListener('DOMContentLoaded', init)
