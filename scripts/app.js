@@ -85,7 +85,7 @@ function init() {
 
   const colors = [ 'Yellow', 'Orange', 'DodgerBlue', 'LimeGreen', 'Red', 'MediumPurple', 'DarkTurquoise' ]
 
-  const speeds = [1000, 794, 617, 472, 355, 262, 190, 135, 94, 64]
+  const speeds = [1000, 800, 620, 480, 360, 270, 210, 160, 130, 110]
 
   let nextBlock = null
   let activeBlock = null
@@ -245,6 +245,9 @@ function init() {
   function controlBlock(event) {
 
     switch (event.keyCode) {
+      case 16:
+        // hold
+        break
       case 37:
         moveBlock('left')
         break
@@ -310,14 +313,17 @@ function init() {
     }
   }
 
+  function redrawBlock() {
+    
+  }
+
   function rotateBlock(direction) {
 
     
     // Rotate current block
     const pivotPoint = pivots[blockId][blockRotation]
     activeBlock = rotateArray(activeBlock, direction)
-    blockRotation = (blockRotation + 1) % 4 //activeBlock.length *reverseArray
-
+    blockRotation = (blockRotation + 1) % 4
     
     // Find grid location of falling block and remove it
     let blockColor
@@ -366,19 +372,28 @@ function init() {
         })
       })
     }
-
-    // printGridState()
     
     // Redraw block to grid
-    activeBlock.forEach(line => { //*reverseArray
+    activeBlock.forEach(line => {
         
       line.forEach((cell, index) => {
         if (cell === 1) {
-          grid[(location[1] * 10) + location[0] + index] = new CellInfo(1, blockColor)
+          grid[(location[1] * width) + location[0] + index] = new CellInfo(1, blockColor)
         }
       })
       location[1]++
     })
+  }
+
+  function holdBlock() {
+
+    // Shuffle blocks in memory
+    const hold = blockId
+    blockId = nextBlock
+    nextBlock = blockId
+    blockRotation = 0
+
+    // Delete and redraw block
   }
 
   function dropBlocks() {
@@ -464,7 +479,7 @@ function init() {
         lines++
         if (lines % 10 === 0) {
           
-          level = Math.min(10, level + 1)
+          level = Math.min(9, level + 1)
           levelDisplay.innerHTML = level
           
           clearInterval(gameTimer)
