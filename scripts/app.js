@@ -113,6 +113,8 @@ function init() {
 
   let gameTimer
   let currentPlayer = 'a'
+  let loopTimer = 31900
+  let musicSpeed = 1
 
   // Objects
 
@@ -196,65 +198,43 @@ function init() {
       }
     }
 
-    const dropDistance = findLanding()
-    console.log(dropDistance)
+    if (grid.some(cell => cell.state === 1)) {
+
+      const dropDistance = findGhost(1)
+
+      grid.forEach((cell, index) => {
+        if (cell.state === 1) {
+          const landingCell = document.querySelector(`[data-id='${index + (dropDistance * width)}']`)
+          landingCell.style.backgroundColor = '#333'
+        }
+      })
+    }
+      
+    
   }
 
-  function findLanding() {
-    
-    // Find falling block
-    let location = null
-    for (let i = 0; i < height; i++) {
-      for (let j = 0; j < width; j++) {
-        if (grid[i * width + j].state === 1 && location === null) {
-          location = [j, i]
-        }
+  function findGhost(drop) {
+
+    let valid = true
+
+    grid.forEach((cell, index) => {
+
+      if (cell.state !== 1) return
+
+      const landingCell = grid[index + (drop * width)]
+      if (landingCell === undefined) {
+        valid = false
+      } else if (landingCell.state > 1) {
+        valid = false
       }
+    })
+
+    if (!valid) {
+      return drop - 1
+    } else {
+      return findGhost(drop + 1)
     }
-    // Apply pivot point calculation
-    location[0] -= pivots[blockId][blockRotation][0]
-    location[1] -= pivots[blockId][blockRotation][1]
 
-    let dropDistance = 0
-    let keepSearching = true
-
-
-    // Check each line beneath for a valid place
-    for (let i = location[1] + 1; i < height; i++) {
-
-      let lineFree = true
-      
-      activeBlock.forEach((line, yIndex) => {
-        line.forEach((cell, xIndex) => {
-
-          const xPos = location[0] + xIndex
-          const yPos = i + yIndex
-          const gridPos = yPos * width + xPos
-
-          if (grid[gridPos] === undefined) {
-            lineFree = false
-            keepSearching = false
-            return
-          }
-
-          const state = grid[gridPos].state
-
-          if (state > 1 && cell === 1) {
-            lineFree = false
-            keepSearching = false
-          }
-
-        })
-        
-      })
-      
-      if (lineFree && keepSearching) {
-        dropDistance++
-      }
-      
-    }
-    
-    return dropDistance
   }
 
 
@@ -592,7 +572,10 @@ function init() {
           level = Math.min(9, level + 1)
           levelDisplay.innerHTML = level
 
-          speedUpMusic(1.03)
+          if (lines <= 100) {
+            loopTimer /= 1.03
+            musicSpeed *= 1.03
+          }
           
           clearInterval(gameTimer)
           gameTimer = setInterval(dropBlocks, speeds[level])
@@ -692,14 +675,11 @@ function init() {
       currentPlayer = 'a'
     }
 
+    player.load()
+    player.playbackRate = musicSpeed
     player.play()
 
-    setTimeout(loopMusic, 31900) // the length of the audio clip in milliseconds.
-  }
-
-  function speedUpMusic(increase) {
-    bgmA.playbackRate *= increase
-    bgmB.playbackRate *= increase
+    setTimeout(loopMusic, loopTimer) // the length of the audio clip in milliseconds.
   }
 
   
