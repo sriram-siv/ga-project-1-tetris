@@ -15,8 +15,9 @@ function init() {
   const levelDisplay = document.querySelector('#level-display')
   const scoreDisplay = document.querySelector('#score-display')
 
-  const bgm = document.querySelector('#bgm')
   const sfx = document.querySelector('#sfx')
+  const bgmA = document.querySelector('#bgmA')
+  const bgmB = document.querySelector('#bgmB')
 
   // Variables
   const width = 10
@@ -111,6 +112,7 @@ function init() {
   let level = 1
 
   let gameTimer
+  let currentPlayer = 'a'
 
   // Objects
 
@@ -270,7 +272,8 @@ function init() {
         if (grid[cellToCheck].state !== 0) {
           clearInterval(gameTimer)
           gameOver = true
-          bgm.pause()
+          bgmA.pause()
+          bgmB.pause()
         }
       })
     })
@@ -589,8 +592,7 @@ function init() {
           level = Math.min(9, level + 1)
           levelDisplay.innerHTML = level
 
-          bgm.enableRate = true
-          bgm.rate = 1 + (level * 0.01)
+          speedUpMusic(1.03)
           
           clearInterval(gameTimer)
           gameTimer = setInterval(dropBlocks, speeds[level])
@@ -632,7 +634,8 @@ function init() {
   function saveOptions(event) {
     event.preventDefault()
     
-    bgm.volume = document.querySelector('#musicEnabled').checked ? 0.7 : 0
+    bgmA.volume = document.querySelector('#musicEnabled').checked ? 0.7 : 0
+    bgmB.volume = document.querySelector('#musicEnabled').checked ? 0.7 : 0
     sfx.volume = document.querySelector('#sfxEnabled').checked ? 1 : 0
 
     optionsScreen.style.display = 'none'
@@ -663,7 +666,7 @@ function init() {
     startScreen.style.display = 'none'
     gameScreen.style.display = 'block'
     
-    bgm.play()
+    loopMusic()
 
     // Initialise starting state
     creategrid()
@@ -675,6 +678,28 @@ function init() {
 
     // Define draw speed
     setInterval(drawGrid, 20)
+  }
+
+  function loopMusic() {
+      
+    let player = null
+
+    if (currentPlayer === 'a') {
+      player = bgmB
+      currentPlayer = 'b'
+    } else {
+      player = bgmA
+      currentPlayer = 'a'
+    }
+
+    player.play()
+
+    setTimeout(loopMusic, 31900) // the length of the audio clip in milliseconds.
+  }
+
+  function speedUpMusic(increase) {
+    bgmA.playbackRate *= increase
+    bgmB.playbackRate *= increase
   }
 
   
