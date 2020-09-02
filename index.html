@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles/style.css">
+    <link rel="icon" type="image/png" href="./images/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
     <script src="scripts/app.js"></script>
     <title>Tetris</title>
 </head>
 <body>
-    <audio id='bgm' src='./sounds/bg_music.m4a' loop></audio>
+    <audio id='bgm' src='./sounds/bg_music.m4a' volume='0.7' loop></audio>
     <audio id='sfx'></audio>
     <div class='game'>
         <div class='grid'></div>
@@ -60,7 +61,24 @@
     </div>
     <div class='start-screen'>
         <img id='logo' src="./images/logo.png" alt="tetris logo">
-        <button class='start-button'>START</button>
+        <button class='button' id='start'>START</button>
+        <button class='button' id='options'>OPTIONS</button>
+    </div>
+    <div class='options-screen'>
+        <h3>OPTIONS</h3>
+        <br><br>
+        <form action="">
+            <label for="musicEnabled">MUSIC</label>
+            <input id='musicEnabled' type="checkbox" checked>
+            <br><br>
+            <label for="sfxEnabled">SFX</label>
+            <input id='sfxEnabled' type="checkbox" checked>
+            <br><br>
+            <input type="submit" class='button' id='save-options' value='SAVE'>
+        </form>
+    </div>
+    <div class='pause-screen'>
+        <h3>PAUSED</h3>
     </div>
 </body>
 </html>

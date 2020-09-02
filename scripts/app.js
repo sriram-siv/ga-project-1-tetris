@@ -1,8 +1,16 @@
 function init() {
   
   // Elements
+
+  const startScreen = document.querySelector('.start-screen')
+  const optionsScreen = document.querySelector('.options-screen')
+  const gameScreen = document.querySelector('.game')
+  const pauseScreen = document.querySelector('.pause-screen')
+
   const gridDiv = document.querySelector('.grid')
+  const previewWindow = document.querySelector('.preview')
   const previewCells = document.querySelectorAll('.preview-cell')
+  const holdWindow = document.querySelector('.hold')
   const holdCells = document.querySelectorAll('.hold-cell')
   const levelDisplay = document.querySelector('#level-display')
   const scoreDisplay = document.querySelector('#score-display')
@@ -18,7 +26,6 @@ function init() {
 
   const blocks = [
     [
-      // TODO fix this so it displays in preview
       [1, 1],
       [1, 1]
     ],
@@ -58,7 +65,6 @@ function init() {
   const pivots = [
     [
       // Square
-      // TODO fix this pivot point
       [0, 0], [0, 0], [0, 0], [0, 0]
     ],
     [
@@ -87,7 +93,7 @@ function init() {
     ]
   ]
 
-  const colors = [ 'Yellow', 'Orange', 'DodgerBlue', 'LimeGreen', 'Red', 'MediumPurple', 'DarkTurquoise' ]
+  // const colors = [ 'Yellow', 'Orange', 'DodgerBlue', 'LimeGreen', 'Red', 'MediumPurple', 'DarkTurquoise' ]
 
   const speeds = [1000, 800, 620, 480, 360, 270, 210, 160, 130, 110]
 
@@ -181,14 +187,72 @@ function init() {
       if (grid[i].state > 0) {
         const tilePath = `./images/tile_${grid[i].tile}.png`
         cell.style.background = `url(${tilePath})`
-        // cell.style.backgroundColor = colors[grid[i].tile]
         cell.style.backgroundSize = 'cover'
       } else {
         cell.style.background = ''
         cell.style.boxShadow = ''
       }
-
     }
+
+    const dropDistance = findLanding()
+    console.log(dropDistance)
+  }
+
+  function findLanding() {
+    
+    // Find falling block
+    let location = null
+    for (let i = 0; i < height; i++) {
+      for (let j = 0; j < width; j++) {
+        if (grid[i * width + j].state === 1 && location === null) {
+          location = [j, i]
+        }
+      }
+    }
+    // Apply pivot point calculation
+    location[0] -= pivots[blockId][blockRotation][0]
+    location[1] -= pivots[blockId][blockRotation][1]
+
+    let dropDistance = 0
+    let keepSearching = true
+
+
+    // Check each line beneath for a valid place
+    for (let i = location[1] + 1; i < height; i++) {
+
+      let lineFree = true
+      
+      activeBlock.forEach((line, yIndex) => {
+        line.forEach((cell, xIndex) => {
+
+          const xPos = location[0] + xIndex
+          const yPos = i + yIndex
+          const gridPos = yPos * width + xPos
+
+          if (grid[gridPos] === undefined) {
+            lineFree = false
+            keepSearching = false
+            return
+          }
+
+          const state = grid[gridPos].state
+
+          if (state > 1 && cell === 1) {
+            lineFree = false
+            keepSearching = false
+          }
+
+        })
+        
+      })
+      
+      if (lineFree && keepSearching) {
+        dropDistance++
+      }
+      
+    }
+    
+    return dropDistance
   }
 
 
@@ -206,6 +270,7 @@ function init() {
         if (grid[cellToCheck].state !== 0) {
           clearInterval(gameTimer)
           gameOver = true
+          bgm.pause()
         }
       })
     })
@@ -228,52 +293,29 @@ function init() {
 
     nextBlock = Math.floor(Math.random() * blocks.length)
 
-    drawPreviews()
+
+    drawPreviews(nextBlock, previewWindow, previewCells)
+    drawPreviews(holdBlock, holdWindow, holdCells)
     
   }
 
-  function drawPreviews() {
+  function drawPreviews(block, window, cells) {
+
+    if (block === null) return
+
     // Get block width and create a centering value for the preview window
-    let blockSize = blocks[nextBlock].length
-    document.querySelector('.preview').style.marginLeft = blockSize === 4 ? '' : '2.4vh'
+    const blockSize = blocks[block].length
+    window.style.marginLeft = blockSize === 4 ? '' : '2.4vh'
 
     // Draw preview
-    // previewCells.forEach(cell => cell.style.backgroundColor = '#010')
-    // previewCells.forEach(cell => cell.style.boxShadow = '')
-    previewCells.forEach(cell => cell.style.background = '')
+    cells.forEach(cell => cell.style.background = '')
     for (let i = 0; i < blockSize; i++) {
       for (let j = 0; j < blockSize; j++) {
         
-        if (blocks[nextBlock][i][j] === 1) {
-          // previewCells[i * 4 + j].style.backgroundColor = colors[nextBlock]
-          // previewCells[i * 4 + j].style.boxShadow = '2px 2px #222 inset'
-          const tilePath = `./images/tile_${nextBlock}.png`
-          previewCells[i * 4 + j].style.background = `url(${tilePath})`
-          previewCells[i * 4 + j].style.backgroundSize = 'cover'
-        }
-      }
-    }
-
-    if (holdBlock !== null) {
-      console.log(holdBlock)
-
-      blockSize = blocks[holdBlock].length
-      document.querySelector('.hold').style.marginLeft = blockSize === 4 ? '' : '2.4vh'
-
-      // Draw hold
-      // holdCells.forEach(cell => cell.style.backgroundColor = '#010')
-      // holdCells.forEach(cell => cell.style.boxShadow = '')
-      holdCells.forEach(cell => cell.style.background = '')
-      for (let i = 0; i < blockSize; i++) {
-        for (let j = 0; j < blockSize; j++) {
-          
-          if (blocks[holdBlock][i][j] === 1) {
-            // holdCells[i * 4 + j].style.backgroundColor = colors[holdBlock]
-            // holdCells[i * 4 + j].style.boxShadow = '2px 2px #222 inset'
-            const tilePath = `./images/tile_${holdBlock}.png`
-            holdCells[i * 4 + j].style.background = `url(${tilePath})`
-            holdCells[i * 4 + j].style.backgroundSize = 'cover'
-          }
+        if (blocks[block][i][j] === 1) {
+          const tilePath = `./images/tile_${block}.png`
+          cells[i * 4 + j].style.background = `url(${tilePath})`
+          cells[i * 4 + j].style.backgroundSize = 'cover'
         }
       }
     }
@@ -281,6 +323,11 @@ function init() {
 
   
   function controlBlock(event) {
+
+    if (event.keyCode === 27) pauseGame() 
+    
+    // Disable controls on pause
+    if (pauseScreen.style.display === 'block') return
 
     switch (event.keyCode) {
       case 16:
@@ -419,6 +466,7 @@ function init() {
 
     redrawBlock(pivotPoint)
 
+    sfx.paus
     sfx.src = './sounds/rotate.ogg'
     sfx.play()
   }
@@ -442,7 +490,8 @@ function init() {
     activeBlock = blocks[blockId]
 
     redrawBlock(pivotPoint)
-    drawPreviews()
+    drawPreviews(nextBlock, previewWindow, previewCells)
+    drawPreviews(holdBlock, holdWindow, holdCells)
 
     sfx.src = './sounds/hold.ogg'
     sfx.play()
@@ -540,8 +589,8 @@ function init() {
           level = Math.min(9, level + 1)
           levelDisplay.innerHTML = level
 
-          bgm.playbackRate = 1 + (level * 0.01)
-          bgm.loop = true
+          bgm.enableRate = true
+          bgm.rate = 1 + (level * 0.01)
           
           clearInterval(gameTimer)
           gameTimer = setInterval(dropBlocks, speeds[level])
@@ -574,11 +623,45 @@ function init() {
     scoreDisplay.innerHTML = score
   }
 
+  function options() {
+    
+    startScreen.style.display = 'none'
+    optionsScreen.style.display = 'block'
+  }
+
+  function saveOptions(event) {
+    event.preventDefault()
+    
+    bgm.volume = document.querySelector('#musicEnabled').checked ? 0.7 : 0
+    sfx.volume = document.querySelector('#sfxEnabled').checked ? 1 : 0
+
+    optionsScreen.style.display = 'none'
+    startScreen.style.display = 'block'
+  }
+
+  function pauseGame() {
+
+    if (gameTimer !== null) {
+      clearInterval(gameTimer)
+      gameTimer = null
+
+      gameScreen.style.display = 'none'
+      pauseScreen.style.display = 'block'
+
+    } else {
+      gameTimer = setInterval(dropBlocks, speeds[level])
+
+      gameScreen.style.display = 'block'
+      pauseScreen.style.display = 'none'
+    }
+
+    // TODO
+  }
 
   function startGame() {
 
-    document.querySelector('.start-screen').style.display = 'none'
-    document.querySelector('.game').style.display = 'block'
+    startScreen.style.display = 'none'
+    gameScreen.style.display = 'block'
     
     bgm.play()
 
@@ -602,7 +685,9 @@ function init() {
   // Attach controls
   document.addEventListener('keydown', controlBlock)
 
-  document.querySelector('.start-button').addEventListener('click', startGame)
+  document.querySelector('#start').addEventListener('click', startGame)
+  document.querySelector('#options').addEventListener('click', options)
+  document.querySelector('#save-options').addEventListener('click', saveOptions)
 }
 
 window.addEventListener('DOMContentLoaded', init)

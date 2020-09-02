@@ -7,21 +7,45 @@ body {
     margin: auto;
     width: 48vh;
     height: 96vh;
-    padding-top: 0.5vh;
     background-color: #222;
 }
 
+.options-screen {
+    display: none;
+    margin: auto;
+    width: 48vh;
+    height: 86vh;
+    padding-top: 10vh;
+    text-align: center;
+    background-color: #222;
+    color: white;
+}
+
+.pause-screen {
+    display: none;
+    width: 48vh;
+    height: 86vh;
+    background-color: #222;
+    color: white;
+    text-align: center;
+    margin: auto;
+    padding-top: 10vh;
+}
+
 #logo {
+    margin: 10vh 0;
     width: 48vh;
 }
 
-.start-button {
+.button {
     display: block;
     font-family: 'Orbitron', sans-serif;
     font-size: 1em;
     background-color: #222;
     color: #aaa;
-    margin: auto;
+    margin: 1vh auto;
+    padding: 5px;
+    width: 8em;
 }
 
 .game {
@@ -32,7 +56,6 @@ body {
     display: flex;
     flex-wrap: wrap;
     width: 48vh;
-    padding-top: 0.5vh;
     margin: auto;
 }
 
