@@ -104,7 +104,6 @@ function init() {
   let blockId = null
   let holdBlock = null
   let blockRotation = 0
-  let clearing = false
   let fall = true
 
   let score = 0
@@ -520,8 +519,8 @@ function init() {
     // Is the next line free
     fall = true
     for (let i = 0; i < grid.length; i++) {
-      // Find falling blocks (normal or in clearing process) that are blocked below
-      if ((grid[i].state === 1 || grid[i].state === 3 ) && (grid[i + width] === undefined || grid[i + width].state === 2)) {
+      // Find falling blocks that are blocked below
+      if (grid[i].state === 1 && (grid[i + width] === undefined || grid[i + width].state === 2)) {
         fall = false
       }
 
@@ -538,11 +537,6 @@ function init() {
           return new CellInfo(1, grid[i - width].tile)
         }
         
-        // Move blocks that are falling due to line clearing down 1 cell
-        if (grid[i - width].state === 3) {
-          return new CellInfo(3, grid[i - width].tile)
-        }
-        
         // Set blocks remain in place
         if (cell.state === 2) {
           return cell
@@ -554,102 +548,95 @@ function init() {
     } else {
 
       // Sound effect
-      if (!clearing) {
-        sfx.src = './sounds/lock.ogg'
-        sfx.play()
-      }
+      sfx.src = './sounds/lock.ogg'
+      sfx.play()
 
       // Solidify cells by turning state => 2
       grid = grid.map((cell) => {
-        return cell.state === 1 || cell.state === 3
+        return cell.state === 1
           ? new CellInfo(2, cell.tile) : cell
       })
 
       // Clear completed lines
-      clearLines()
+      setTimeout(clearLines, 200)
 
       // Generate new block and reset line counter
-      if (!clearing) {
-        spawnBlock()
-        
-        if (consecutiveLines === 4) {
-          sfx.src = './sounds/tetris.ogg'
-          sfx.play()
-        } else if (consecutiveLines > 0) {
-          sfx.src = './sounds/line_clear.ogg'
-          sfx.play()
-        }
+      spawnBlock()
 
-        consecutiveLines = 0
-      }
-
-      clearing = false
     }
   }
 
   function clearLines() {
 
-    // Cycle through each horizontal line of the grid
-    for (let i = height - 1; i >= 0; i--) {
+    let completeLine = null
 
-      // Check if all cells have a state of 2
+    // Cycle through each horizontal line of the grid
+    for (let i = 0; i < height; i++) {
+
+      // Find last line that is full and set as line to clear
       const line = grid.slice(i * width, (i + 1) * width).map(cell => cell.state)
       const clear = line.every(cell => cell === 2)
+      if (clear) completeLine = i
 
-      if (clear) {
-        clearing = true
-  
-        // Remove line from grid
-        for (let j = i * width; j < (i + 1) * width; j++) {
-          grid[j] = new CellInfo()
-        }
+    }
 
-        // Move all lines above down into empty space
-        grid.map((cell, index) => {
-          if (grid[index].state === 2 && index < i * width) grid[index].state = 3
-        })
+    if (completeLine !== null) {
+      
+      // Delete line
+      for (let i = 0; i < width; i++) {
+        grid[completeLine * width + i] = new CellInfo()
+      }
 
-        addScore()
+      // Shift all lines above
+      const lastBlockInClearedLine = (completeLine + 1) * width - 1
+      for (let i = lastBlockInClearedLine ; i >= 0; i--) {
+        
+        grid[i] = grid[i - width] === undefined
+          ? new CellInfo() : grid[i - width]
+      }
+
+      consecutiveLines++
+
+      clearLines()
+
+    } else {
+
+      const clearSFX = ['', './sounds/line_clear.ogg', './sounds/line_clear.ogg', './sounds/line_clear.ogg', './sounds/tetris.ogg']
+      sfx.src = clearSFX[consecutiveLines]
+      sfx.play()
+
+      
+      addScore()
+      
+      for (let i = 0; i < consecutiveLines; i++) {
         lines++
+  
         if (lines % 10 === 0) {
           
           level = Math.min(9, level + 1)
           levelDisplay.innerHTML = level
-
-          if (lines <= 100) {
+        
+          if (lines <= 100) { // Max level
             loopTimer /= 1.03
             musicSpeed *= 1.03
           }
-          
+        
           clearInterval(gameTimer)
           gameTimer = setInterval(dropBlocks, speeds[level])
         }
-
-        const dropDelay = consecutiveLines === 0 ? 10 : 0
-        consecutiveLines++
-        console.log(consecutiveLines)
-        console.log(dropDelay)
-
-        setTimeout(dropBlocks, dropDelay)
-        
-        break
-
       }
+
+      consecutiveLines = 0
     }
-
-    // if (consecutiveLines === 4) {
-    //   sfx.src = './sounds/tetris.ogg'
-    //   sfx.play()
-    // } else if (consecutiveLines > 0) {
-    //   sfx.src = './sounds/line_clear.ogg'
-    //   sfx.play()
-    // }
-
+    
   }
 
   function addScore() {
     const base = (level + 1) * 40
-    const multiplier = [1, 1.5, 3, 9][consecutiveLines]
+    const multiplier = [0, 1, 2.5, 7.5, 30][consecutiveLines]
+
+    console.log({ base })
+    console.log({ multiplier })
 
     score += base * multiplier
     scoreDisplay.innerHTML = score
@@ -702,7 +689,6 @@ function init() {
     blockId = null
     holdBlock = null
     blockRotation = 0
-    clearing = false
     fall = true
     score = 0
     lines = 0
