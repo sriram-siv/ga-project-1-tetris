@@ -110,7 +110,7 @@ function init() {
   let score = 0
   let lines = 0
   let consecutiveLines = 0
-  let level = 1
+  let level = 0
 
   let gameTimer
   let frameTimer
@@ -128,11 +128,11 @@ function init() {
   }
 
   const music = {
-    eightBit1: ['The Crane Dance.WAV', 31900],
-    eightBit2: ['The Crane Dance.WAV', 31900],
-    zone1: ['rain.wav', 42700],
-    zone2: ['rain.wav', 42700],
-    off: [false, 0]
+    eightBit1: 31900,
+    eightBit2: 16000,
+    zone1: 42700,
+    zone2: 42000,
+    off: 0
   }
 
   // Objects
@@ -568,20 +568,29 @@ function init() {
       // Clear completed lines
       clearLines()
 
-      // Generate new block
-      if (!clearing) spawnBlock()
+      // Generate new block and reset line counter
+      if (!clearing) {
+        spawnBlock()
+        
+        if (consecutiveLines === 4) {
+          sfx.src = './sounds/tetris.ogg'
+          sfx.play()
+        } else if (consecutiveLines > 0) {
+          sfx.src = './sounds/line_clear.ogg'
+          sfx.play()
+        }
+
+        consecutiveLines = 0
+      }
+
       clearing = false
-
-      // Print grid to console
-      // printGridState()
-
     }
   }
 
   function clearLines() {
 
     // Cycle through each horizontal line of the grid
-    for (let i = 0; i < height; i++) {
+    for (let i = height - 1; i >= 0; i--) {
 
       // Check if all cells have a state of 2
       const line = grid.slice(i * width, (i + 1) * width).map(cell => cell.state)
@@ -616,27 +625,30 @@ function init() {
           gameTimer = setInterval(dropBlocks, speeds[level])
         }
 
-        const dropDelay = consecutiveLines === 0 ? 200 : 0
+        const dropDelay = consecutiveLines === 0 ? 10 : 0
         consecutiveLines++
+        console.log(consecutiveLines)
+        console.log(dropDelay)
 
         setTimeout(dropBlocks, dropDelay)
+        
+        break
+
       }
     }
 
-    if (consecutiveLines === 4) {
-      sfx.src = './sounds/tetris.ogg'
-      sfx.play()
-    } else if (consecutiveLines > 0) {
-      sfx.src = './sounds/line_clear.ogg'
-      sfx.play()
-    }
-
-    consecutiveLines = 0
+    // if (consecutiveLines === 4) {
+    //   sfx.src = './sounds/tetris.ogg'
+    //   sfx.play()
+    // } else if (consecutiveLines > 0) {
+    //   sfx.src = './sounds/line_clear.ogg'
+    //   sfx.play()
+    // }
 
   }
 
   function addScore() {
-    const base = level * 40
+    const base = (level + 1) * 40
     const multiplier = [1, 1.5, 3, 9][consecutiveLines]
 
     score += base * multiplier
@@ -761,7 +773,7 @@ function init() {
       currentPlayer = 'a'
     }
 
-    player.src = `./sounds/${music[options.music][0]}`
+    player.src = `./sounds/${options.music}.wav`
     player.load()
     player.playbackRate = musicSpeed
     player.play()
@@ -777,7 +789,7 @@ function init() {
     const musicChoice = event.target.getAttribute('data-music')
 
     options.music = musicChoice
-    loopTimer = music[musicChoice][1]
+    loopTimer = music[musicChoice]
 
     document.querySelectorAll('.radio-button').forEach(button => {
       button.src = './images/tile_4.png'
@@ -790,19 +802,23 @@ function init() {
   function toggleOption(event) {
 
     if (event.target.nodeName !== 'IMG') return
-
-    sfx.src = './sounds/lock.ogg'
-    sfx.play()
     
     const optionName = event.target.getAttribute('data-option')
-
+    
     options[optionName] = !options[optionName]
-
+    
     event.target.src = options[optionName] ? './images/tile_3.png' : './images/tile_4.png'
-
+    
     if (optionName === 'mono') {
       changeStyle()
     }
+    
+    if (optionName === 'sfx') {
+      sfx.volume = options.sfx ? 1 : 0
+    }
+
+    sfx.src = './sounds/lock.ogg'
+    sfx.play()
   }
 
   function changeStyle() {
