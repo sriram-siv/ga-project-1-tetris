@@ -22,7 +22,7 @@ function init() {
 
   // Variables
   const width = 10
-  const height = 20
+  const height = 21
 
   let grid
 
@@ -32,29 +32,29 @@ function init() {
       [1, 1]
     ],
     [
-      [0, 1, 0],
-      [0, 1, 0],
-      [0, 1, 1]
-    ],
-    [
-      [0, 1, 0],
-      [0, 1, 0],
-      [1, 1, 0]
+      [0, 0, 1],
+      [1, 1, 1],
+      [0, 0, 0]
     ],
     [
       [1, 0, 0],
+      [1, 1, 1],
+      [0, 0, 0]
+    ],
+    [
+      [0, 1, 1],
       [1, 1, 0],
-      [0, 1, 0]
+      [0, 0, 0]
+    ],
+    [
+      [1, 1, 0],
+      [0, 1, 1],
+      [0, 0, 0]
     ],
     [
       [0, 1, 0],
-      [1, 1, 0],
-      [1, 0, 0]
-    ],
-    [
-      [0, 0, 0],
       [1, 1, 1],
-      [0, 1, 0]
+      [0, 0, 0]
     ],
     [
       [0, 0, 0, 0],
@@ -71,23 +71,23 @@ function init() {
     ],
     [
       // L
-      [1, 0], [0, 1], [0, 0], [2, 0]
+      [2, 0], [1, 0], [0, 1], [0, 0]
     ],
     [
       // J
-      [1, 0], [0, 0], [1, 0], [0, 1]
+      [0, 0], [1, 0], [0, 1], [1, 0]
     ],
     [
       // S
-      [0, 0], [1, 0], [1, 0], [1, 1]
+      [1, 0], [1, 0], [1, 1], [0, 0]
     ],
     [
       // Z
-      [1, 0], [0, 0], [2, 0], [0, 1]
+      [0, 0], [2, 0], [0, 1], [1, 0]
     ],
     [
       // T
-      [0, 1], [1, 0], [1, 0], [1, 0]
+      [1, 0], [1, 0], [0, 1], [1, 0]
     ],
     [
       // I
@@ -138,14 +138,15 @@ function init() {
 
   class CellInfo {
     constructor(state = 0, tile = 0) {
-      // States : 0: empty, 1 falling , 2: set, 3: move on clear
+      // States : 0: empty, 1 falling , 2: set
       this.state = state
       this.tile = tile
-      
     }
   }
 
   // Functions
+
+  // Print to console for debuggin
 
   // function printBlockState() {
   //   // console.clear()
@@ -163,11 +164,7 @@ function init() {
   //   }
   // }
 
-
-  function clickCell(event) {
-    console.log(event.target.getAttribute('data-id'))
-  }
-
+  // Return an array rotated by 90deg (direction - 1:cw / -1:ccw)
   function rotateArray(array, direction = 1) {
 
     const result = []
@@ -195,11 +192,13 @@ function init() {
       grid.push(new CellInfo())
 
       // Create cell for display in flex-box
-      const cell = document.createElement('div')
-      cell.classList.add('cell')
-      cell.setAttribute('data-id', i)
-      cell.addEventListener('click', clickCell) // Just for debugging
-      gridDiv.appendChild(cell)
+      // Except for the first line which remains off screen
+      if (i >= width) {
+        const cell = document.createElement('div')
+        cell.classList.add('cell')
+        cell.setAttribute('data-id', i)
+        gridDiv.appendChild(cell)
+      }
     }
   }
 
@@ -207,7 +206,8 @@ function init() {
 
     if (gameoverScreen.style.display === 'block') return
 
-    for (let i = 0; i < width * height; i++) {
+    for (let i = width; i < width * height; i++) {
+
       const cell = document.querySelector(`[data-id='${i}']`)
 
       if (grid[i].state > 0) {
@@ -224,8 +224,6 @@ function init() {
         cell.style.background = ''
         cell.style.boxShadow = ''
         cell.style.opacity = '1'
-        // cell.style.backgroundColor = options.mono
-        //   ? 'rgb(71, 17, 197)' : '#222'
       }
 
     }
@@ -545,7 +543,8 @@ function init() {
         // Everything else is an empty space
         return new CellInfo()
       })
-    } else {
+
+    } else { // Block has reached the bottom of the well
 
       // Sound effect
       sfx.src = './sounds/lock.ogg'
@@ -560,7 +559,7 @@ function init() {
       // Clear completed lines
       setTimeout(clearLines, 200)
 
-      // Generate new block and reset line counter
+      // Generate new block
       spawnBlock()
 
     }
@@ -597,17 +596,19 @@ function init() {
 
       consecutiveLines++
 
+      // Call the function recursively until no complete lines are found
       clearLines()
 
     } else {
 
+      // Play line clear sound
       const clearSFX = ['', './sounds/line_clear.ogg', './sounds/line_clear.ogg', './sounds/line_clear.ogg', './sounds/tetris.ogg']
       sfx.src = clearSFX[consecutiveLines]
       sfx.play()
-
       
       addScore()
       
+      // Increase line count in a loop so that the level up isn't skippedd
       for (let i = 0; i < consecutiveLines; i++) {
         lines++
   
@@ -621,11 +622,13 @@ function init() {
             musicSpeed *= 1.03
           }
         
+          // Restart game timer with new level speed
           clearInterval(gameTimer)
           gameTimer = setInterval(dropBlocks, speeds[level])
         }
       }
 
+      // Reset
       consecutiveLines = 0
     }
     
@@ -642,22 +645,10 @@ function init() {
     scoreDisplay.innerHTML = score
   }
 
+
   function openOptions() {
-    
     startScreen.style.display = 'none'
     optionsScreen.style.display = 'block'
-  }
-
-  function saveOptions(event) {
-    event.preventDefault()
-    
-    bgmA.volume = options.music ? 0.7 : 0
-    bgmB.volume = options.music ? 0.7 : 0
-    sfx.volume = options.sfx ? 1 : 0
-    
-
-    optionsScreen.style.display = 'none'
-    startScreen.style.display = 'block'
   }
 
   function pauseGame() {
@@ -716,6 +707,8 @@ function init() {
     startScreen.style.display = 'block'
     gameoverScreen.style.display = 'none'
     gameScreen.style.display = 'none'
+    optionsScreen.style.display = 'none'
+    pauseScreen.style.display = 'none'
   }
 
   function startGame() {
@@ -728,6 +721,9 @@ function init() {
     if (options.music !== 'off') {
       setTimeout(loopMusic, 500)
     }
+
+    bgmA.volume = options.music ? 0.7 : 0
+    bgmB.volume = options.music ? 0.7 : 0
 
     // Initialise starting state
     creategrid()
@@ -861,7 +857,7 @@ function init() {
   
   document.querySelector('.menu').addEventListener('click', goToMenu)
   document.querySelector('#options').addEventListener('click', openOptions)
-  document.querySelector('#save-options').addEventListener('click', saveOptions)
+  document.querySelector('#save-options').addEventListener('click', goToMenu)
 
   document.querySelectorAll('.toggle').forEach(button => {
     button.addEventListener('click', toggleOption)
