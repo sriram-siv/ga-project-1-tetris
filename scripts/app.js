@@ -6,6 +6,7 @@ function init() {
   const optionsScreen = document.querySelector('.options-screen')
   const gameScreen = document.querySelector('.game')
   const pauseScreen = document.querySelector('.pause-screen')
+  const gameoverScreen = document.querySelector('.gameover-screen')
 
   const gridDiv = document.querySelector('.grid')
   const previewWindow = document.querySelector('.preview')
@@ -112,9 +113,27 @@ function init() {
   let level = 1
 
   let gameTimer
+  let frameTimer
   let currentPlayer = 'a'
   let loopTimer = 31900
   let musicSpeed = 1
+
+  // Options
+
+  const options = {
+    sfx: true,
+    ghost: true,
+    mono: false,
+    music: 'eightBit1'
+  }
+
+  const music = {
+    eightBit1: ['The Crane Dance.WAV', 31900],
+    eightBit2: ['The Crane Dance.WAV', 31900],
+    zone1: ['rain.wav', 42700],
+    zone2: ['rain.wav', 42700],
+    off: [false, 0]
+  }
 
   // Objects
 
@@ -123,6 +142,7 @@ function init() {
       // States : 0: empty, 1 falling , 2: set, 3: move on clear
       this.state = state
       this.tile = tile
+      
     }
   }
 
@@ -185,20 +205,33 @@ function init() {
   }
 
   function drawGrid() {
+
+    if (gameoverScreen.style.display === 'block') return
+
     for (let i = 0; i < width * height; i++) {
       const cell = document.querySelector(`[data-id='${i}']`)
 
       if (grid[i].state > 0) {
-        const tilePath = `./images/tile_${grid[i].tile}.png`
+        let tilePath
+        if (options.mono) {
+          tilePath = `./images/mono/tile_${grid[i].tile}.png`
+        } else {
+          tilePath = `./images/tile_${grid[i].tile}.png`
+        }
         cell.style.background = `url(${tilePath})`
         cell.style.backgroundSize = 'cover'
+
       } else {
         cell.style.background = ''
         cell.style.boxShadow = ''
+        cell.style.opacity = '1'
+        // cell.style.backgroundColor = options.mono
+        //   ? 'rgb(71, 17, 197)' : '#222'
       }
+
     }
 
-    if (grid.some(cell => cell.state === 1)) {
+    if (grid.some(cell => cell.state === 1) && options.ghost) {
 
       const dropDistance = findGhost(1)
 
@@ -209,7 +242,7 @@ function init() {
         }
       })
     }
-      
+    
     
   }
 
@@ -242,7 +275,7 @@ function init() {
 
     const spawnPosition = Math.floor(width / 2 - 1)
 
-    let gameOver = false
+    let blocked = false
 
     activeBlock = blocks[nextBlock]
 
@@ -251,14 +284,13 @@ function init() {
         const cellToCheck = (yIndex * width) + xIndex + spawnPosition
         if (grid[cellToCheck].state !== 0) {
           clearInterval(gameTimer)
-          gameOver = true
-          bgmA.pause()
-          bgmB.pause()
+          blocked = true
+          gameover()
         }
       })
     })
 
-    if (gameOver) return
+    if (blocked) return
 
     // Draw block into starting position
     let drawLine = 0
@@ -290,13 +322,16 @@ function init() {
     const blockSize = blocks[block].length
     window.style.marginLeft = blockSize === 4 ? '' : '2.4vh'
 
+    // Get tile
+    const tilePath = options.mono
+      ? `./images/mono/tile_${block}.png` : `./images/tile_${block}.png`
+
     // Draw preview
     cells.forEach(cell => cell.style.background = '')
     for (let i = 0; i < blockSize; i++) {
       for (let j = 0; j < blockSize; j++) {
         
         if (blocks[block][i][j] === 1) {
-          const tilePath = `./images/tile_${block}.png`
           cells[i * 4 + j].style.background = `url(${tilePath})`
           cells[i * 4 + j].style.backgroundSize = 'cover'
         }
@@ -608,7 +643,7 @@ function init() {
     scoreDisplay.innerHTML = score
   }
 
-  function options() {
+  function openOptions() {
     
     startScreen.style.display = 'none'
     optionsScreen.style.display = 'block'
@@ -617,9 +652,10 @@ function init() {
   function saveOptions(event) {
     event.preventDefault()
     
-    bgmA.volume = document.querySelector('#musicEnabled').checked ? 0.7 : 0
-    bgmB.volume = document.querySelector('#musicEnabled').checked ? 0.7 : 0
-    sfx.volume = document.querySelector('#sfxEnabled').checked ? 1 : 0
+    bgmA.volume = options.music ? 0.7 : 0
+    bgmB.volume = options.music ? 0.7 : 0
+    sfx.volume = options.sfx ? 1 : 0
+    
 
     optionsScreen.style.display = 'none'
     startScreen.style.display = 'block'
@@ -640,30 +676,80 @@ function init() {
       gameScreen.style.display = 'block'
       pauseScreen.style.display = 'none'
     }
+  }
 
-    // TODO
+  function gameover() {
+    // Pause music
+    bgmA.pause()
+    bgmB.pause()
+
+    // Reset state
+    grid = null
+    nextBlock = null
+    activeBlock = null
+    blockId = null
+    holdBlock = null
+    blockRotation = 0
+    clearing = false
+    fall = true
+    score = 0
+    lines = 0
+    consecutiveLines = 0
+    level = 0
+    gameTimer = null
+    frameTimer = null
+    currentPlayer = 'a'
+    loopTimer = 31900
+    musicSpeed = 1
+
+    for (let i = 0; i < width * height; i++) {
+      document.querySelector(`[data-id='${i}']`).remove()
+    }
+
+    clearInterval(gameTimer)
+    clearInterval(frameTimer)
+
+    // Change view
+    gameScreen.style.display = 'none'
+    gameoverScreen.style.display = 'block'
+  }
+
+  function goToMenu() {
+    startScreen.style.display = 'block'
+    gameoverScreen.style.display = 'none'
+    gameScreen.style.display = 'none'
   }
 
   function startGame() {
 
     startScreen.style.display = 'none'
+    gameoverScreen.style.display = 'none'
     gameScreen.style.display = 'block'
-    
-    loopMusic()
+
+
+    if (options.music !== 'off') {
+      setTimeout(loopMusic, 500)
+    }
 
     // Initialise starting state
     creategrid()
     nextBlock = Math.floor(Math.random() * blocks.length)
     spawnBlock()
+
+    gridDiv.style.backgroundColor = options.mono
+      ? 'rgb(71, 17, 197)' : '#222'
+
     
     // Start movement
     gameTimer = setInterval(dropBlocks, 1000)
 
     // Define draw speed
-    setInterval(drawGrid, 20)
+    frameTimer = setInterval(drawGrid, 20)
   }
 
   function loopMusic() {
+
+    if (gameoverScreen.style.display === 'block') return
       
     let player = null
 
@@ -675,11 +761,81 @@ function init() {
       currentPlayer = 'a'
     }
 
+    player.src = `./sounds/${music[options.music][0]}`
     player.load()
     player.playbackRate = musicSpeed
     player.play()
 
     setTimeout(loopMusic, loopTimer) // the length of the audio clip in milliseconds.
+  }
+
+  function radioOption(event) {
+
+    sfx.src = './sounds/lock.ogg'
+    sfx.play()
+
+    const musicChoice = event.target.getAttribute('data-music')
+
+    options.music = musicChoice
+    loopTimer = music[musicChoice][1]
+
+    document.querySelectorAll('.radio-button').forEach(button => {
+      button.src = './images/tile_4.png'
+    })
+
+    event.target.src = './images/tile_3.png'
+
+  }
+
+  function toggleOption(event) {
+
+    if (event.target.nodeName !== 'IMG') return
+
+    sfx.src = './sounds/lock.ogg'
+    sfx.play()
+    
+    const optionName = event.target.getAttribute('data-option')
+
+    options[optionName] = !options[optionName]
+
+    event.target.src = options[optionName] ? './images/tile_3.png' : './images/tile_4.png'
+
+    if (optionName === 'mono') {
+      changeStyle()
+    }
+  }
+
+  function changeStyle() {
+    if (options.mono) {
+      gridDiv.style.backgroundColor = 'rgb(71, 17, 197)'
+      startScreen.style.backgroundColor = 'rgb(71, 17, 197)'
+      optionsScreen.style.backgroundColor = 'rgb(71, 17, 197)'
+      pauseScreen.style.backgroundColor = 'rgb(71, 17, 197)'
+      gameoverScreen.style.backgroundColor = 'rgb(71, 17, 197)'
+
+      const buttons = document.querySelectorAll('.button')
+      buttons.forEach(button => {
+        button.style.backgroundColor = 'rgb(230, 62, 154)'
+        button.style.color = 'rgb(40, 10, 121)'
+      })
+
+      document.querySelector('#logo').src = './images/mono/logo.png'
+    } else {
+      
+      gridDiv.style.backgroundColor = '#222'
+      startScreen.style.backgroundColor = '#222'
+      optionsScreen.style.backgroundColor = '#222'
+      pauseScreen.style.backgroundColor = '#222'
+      gameoverScreen.style.backgroundColor = '#222'
+      
+      const buttons = document.querySelectorAll('.button')
+      buttons.forEach(button => {
+        button.style.backgroundColor = '#222'
+        button.style.color = '#aaa'
+      })
+
+      document.querySelector('#logo').src = './images/logo.png'
+    }
   }
 
   
@@ -690,9 +846,29 @@ function init() {
   // Attach controls
   document.addEventListener('keydown', controlBlock)
 
-  document.querySelector('#start').addEventListener('click', startGame)
-  document.querySelector('#options').addEventListener('click', options)
+  document.querySelectorAll('.start').forEach(button => {
+    button.addEventListener('click', startGame)
+  })
+
+  document.querySelectorAll('.button').forEach(button => {
+    button.addEventListener('click', () => {
+      sfx.src = './sounds/button_click.wav'
+      sfx.play()
+    })
+  })
+  
+  document.querySelector('.menu').addEventListener('click', goToMenu)
+  document.querySelector('#options').addEventListener('click', openOptions)
   document.querySelector('#save-options').addEventListener('click', saveOptions)
+
+  document.querySelectorAll('.toggle').forEach(button => {
+    button.addEventListener('click', toggleOption)
+  })
+
+  document.querySelectorAll('.radio-button').forEach(button => {
+    button.addEventListener('click', radioOption)
+  })
+  
 }
 
 window.addEventListener('DOMContentLoaded', init)

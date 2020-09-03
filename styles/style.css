@@ -10,26 +10,17 @@ body {
     background-color: #222;
 }
 
-.options-screen {
+.options-screen,
+.pause-screen,
+.gameover-screen {
     display: none;
     margin: auto;
     width: 48vh;
     height: 86vh;
-    padding-top: 10vh;
+    padding-top: 5vh;
     text-align: center;
     background-color: #222;
     color: white;
-}
-
-.pause-screen {
-    display: none;
-    width: 48vh;
-    height: 86vh;
-    background-color: #222;
-    color: white;
-    text-align: center;
-    margin: auto;
-    padding-top: 10vh;
 }
 
 #logo {
@@ -48,6 +39,10 @@ body {
     width: 8em;
 }
 
+.button:focus {
+    outline: none;
+}
+
 .game {
     display: none;
 }
@@ -62,7 +57,7 @@ body {
 .cell {
     width: 4.8vh;
     height: 4.8vh;
-    background-color: #222;
+    /* background-color: #222; */
     /* box-shadow: 2px 2px #222 inset; */
 }
 
@@ -84,4 +79,36 @@ body {
 .preview-cell, .hold-cell {
     width: 4.8vh;
     height: 4.8vh;
+}
+
+.toggle p {
+    margin: 0;
+    position: relative;
+    left: -20px;
+}
+
+.toggle img {
+    width: 20px;
+    position: relative;
+    top: -20px;
+    left: 40px;
+}
+
+.radio-div p {
+    margin: 0;
+    position: relative;
+    left: -20px;
+}
+
+.radio-button {
+    width: 20px;
+    position: relative;
+    top: -20px;
+    left: 40px;
+}
+
+.test {
+    color: rgb(230, 62, 154);
+    color: rgb(71, 17, 197);
+    color: rgb(43, 10, 121);
 }
