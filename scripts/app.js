@@ -4,6 +4,7 @@ function init() {
 
   const startScreen = document.querySelector('.start-screen')
   const optionsScreen = document.querySelector('.options-screen')
+  const controlsScreen = document.querySelector('.controls-screen')
   const gameScreen = document.querySelector('.game')
   const pauseScreen = document.querySelector('.pause-screen')
   const gameoverScreen = document.querySelector('.gameover-screen')
@@ -146,24 +147,6 @@ function init() {
 
   // Functions
 
-  // Print to console for debuggin
-
-  // function printBlockState() {
-  //   // console.clear()
-  //   activeBlock.forEach(line => console.log(line, '\n')) //*reverseArray
-  // }
-
-  // function printGridState() {
-  //   console.clear()
-  //   for (let i = 0; i < height; i++) {
-  //     let printLine = ''
-  //     for (let j = 0; j < width; j++) {
-  //       printLine += grid[(i * width) + j].state
-  //     }
-  //     console.log(printLine)
-  //   }
-  // }
-
   // Return an array rotated by 90deg (direction - 1:cw / -1:ccw)
   function rotateArray(array, direction = 1) {
 
@@ -204,13 +187,15 @@ function init() {
 
   function drawGrid() {
 
-    if (gameoverScreen.style.display === 'block') return
+    if (frameTimer === null) return
 
     for (let i = width; i < width * height; i++) {
 
       const cell = document.querySelector(`[data-id='${i}']`)
+      cell.style.background = ''
 
       if (grid[i].state > 0) {
+
         let tilePath
         if (options.mono) {
           tilePath = `./images/mono/tile_${grid[i].tile}.png`
@@ -220,14 +205,10 @@ function init() {
         cell.style.background = `url(${tilePath})`
         cell.style.backgroundSize = 'cover'
 
-      } else {
-        cell.style.background = ''
-        cell.style.boxShadow = ''
-        cell.style.opacity = '1'
       }
-
     }
 
+    // Draw ghost
     if (grid.some(cell => cell.state === 1) && options.ghost) {
 
       const dropDistance = findGhost(1)
@@ -240,7 +221,6 @@ function init() {
       })
     }
     
-    
   }
 
   function findGhost(drop) {
@@ -252,30 +232,26 @@ function init() {
       if (cell.state !== 1) return
 
       const landingCell = grid[index + (drop * width)]
-      if (landingCell === undefined) {
-        valid = false
-      } else if (landingCell.state > 1) {
+      if (landingCell === undefined || landingCell.state > 1) {
         valid = false
       }
     })
 
-    if (!valid) {
-      return drop - 1
-    } else {
-      return findGhost(drop + 1)
-    }
+    return valid ? findGhost(drop + 1) : drop - 1
 
   }
 
 
   function spawnBlock() {
 
-    const spawnPosition = Math.floor(width / 2 - 1)
+    // Half of width
+    let spawnPosition = Math.floor(width / 2 - 1)
 
     let blocked = false
 
     activeBlock = blocks[nextBlock]
 
+    // Check if block can fit into grid
     activeBlock.forEach((line, yIndex) => {
       line.forEach((cell, xIndex) => {
         const cellToCheck = (yIndex * width) + xIndex + spawnPosition
@@ -290,21 +266,17 @@ function init() {
     if (blocked) return
 
     // Draw block into starting position
-    let drawLine = 0
     activeBlock.forEach(line => {
       line.forEach((cell, i) => {
-        grid[drawLine + spawnPosition + i].state = cell
-        grid[drawLine + spawnPosition + i].tile = nextBlock
+        grid[spawnPosition + i] = new CellInfo(cell, nextBlock)
       })
       // Move to next line of grid after current line is inserted
-      drawLine += width
+      spawnPosition += width
     })
 
     blockId = nextBlock
     blockRotation = 0
-
     nextBlock = Math.floor(Math.random() * blocks.length)
-
 
     drawPreviews(nextBlock, previewWindow, previewCells)
     drawPreviews(holdBlock, holdWindow, holdCells)
@@ -313,6 +285,7 @@ function init() {
 
   function drawPreviews(block, window, cells) {
 
+    // If no hold block yet
     if (block === null) return
 
     // Get block width and create a centering value for the preview window
@@ -336,8 +309,22 @@ function init() {
     }
   }
 
+  function clearPreviews() {
+
+    const windows = [previewCells, holdCells]
+
+    windows.forEach(window => {
+      window.forEach(cell => {
+        cell.style.background = ''
+      })
+    })
+  }
+
   
   function controlBlock(event) {
+
+    // Game over
+    if (frameTimer === null) return
 
     if (event.keyCode === 27) pauseGame() 
     
@@ -371,7 +358,6 @@ function init() {
   }
 
   function moveBlock(direction) {
-
 
     // Define variables according to direction
     const touchingEdge = direction === 'left' ? 0 : 9
@@ -433,14 +419,14 @@ function init() {
     location[0] = Math.max(0, location[0] - pivotPoint[0])
     location[1] = Math.max(0, location[1] - pivotPoint[1])
 
-    
     // Shift location if it would collide with a boundary or block
     let validMove = false
     while (!validMove) {
       validMove = true
       
-      activeBlock.forEach((line, yIndex) => { //*reverseArray
+      activeBlock.forEach((line, yIndex) => {
         line.forEach((cell, xIndex) => {
+          // Only check for falling blocks
           if (cell !== 1) return
 
           const cellToCheck = ((location[1] + yIndex) * width) + (location[0] + xIndex)
@@ -463,11 +449,12 @@ function init() {
     
     // Redraw block to grid
     activeBlock.forEach(line => {
-        
       line.forEach((cell, index) => {
+
         if (cell === 1) {
           grid[(location[1] * width) + location[0] + index] = new CellInfo(1, blockId)
         }
+
       })
       location[1]++
     })
@@ -481,7 +468,6 @@ function init() {
 
     redrawBlock(pivotPoint)
 
-    sfx.paus
     sfx.src = './sounds/rotate.ogg'
     sfx.play()
   }
@@ -491,15 +477,14 @@ function init() {
     // Shuffle blocks in memory
     const pivotPoint = pivots[blockId][blockRotation]
     const swap = blockId
-
+    
     if (holdBlock === null) {
       blockId = nextBlock
       nextBlock = Math.floor(Math.random() * blocks.length)
-      holdBlock = swap
     } else {
       blockId = holdBlock
-      holdBlock = swap
     }
+    holdBlock = swap
 
     blockRotation = 0
     activeBlock = blocks[blockId]
@@ -521,7 +506,6 @@ function init() {
       if (grid[i].state === 1 && (grid[i + width] === undefined || grid[i + width].state === 2)) {
         fall = false
       }
-
     }
 
     // Move all cells that contain falling blocks down if so
@@ -561,7 +545,6 @@ function init() {
 
       // Generate new block
       spawnBlock()
-
     }
   }
 
@@ -631,7 +614,6 @@ function init() {
       // Reset
       consecutiveLines = 0
     }
-    
   }
 
   function addScore() {
@@ -646,9 +628,16 @@ function init() {
   }
 
 
+  // MENUS AND OPTIONS
+
   function openOptions() {
     startScreen.style.display = 'none'
     optionsScreen.style.display = 'block'
+  }
+
+  function openControls() {
+    startScreen.style.display = 'none'
+    controlsScreen.style.display = 'block'
   }
 
   function pauseGame() {
@@ -668,10 +657,15 @@ function init() {
     }
   }
 
-  function gameover() {
+  function gameover(sound = true) {
     // Pause music
     bgmA.pause()
     bgmB.pause()
+
+    if (sound) {
+      sfx.src = './sounds/gameover.wav'
+      sfx.play()
+    }
 
     // Reset state
     grid = null
@@ -692,9 +686,11 @@ function init() {
     musicSpeed = 1
 
     for (let i = 0; i < width * height; i++) {
-      document.querySelector(`[data-id='${i}']`).remove()
+      const cell = document.querySelector(`[data-id='${i}']`)
+      if (cell) cell.remove()
     }
 
+    clearPreviews()
     clearInterval(gameTimer)
     clearInterval(frameTimer)
 
@@ -704,11 +700,15 @@ function init() {
   }
 
   function goToMenu() {
+
+    gameover(false)
+
     startScreen.style.display = 'block'
     gameoverScreen.style.display = 'none'
     gameScreen.style.display = 'none'
     optionsScreen.style.display = 'none'
     pauseScreen.style.display = 'none'
+    controlsScreen.style.display = 'none'
   }
 
   function startGame() {
@@ -717,7 +717,7 @@ function init() {
     gameoverScreen.style.display = 'none'
     gameScreen.style.display = 'block'
 
-
+    // Initialise options
     if (options.music !== 'off') {
       setTimeout(loopMusic, 500)
     }
@@ -725,14 +725,13 @@ function init() {
     bgmA.volume = options.music ? 0.7 : 0
     bgmB.volume = options.music ? 0.7 : 0
 
+    gridDiv.style.backgroundColor = options.mono
+      ? 'rgb(71, 17, 197)' : '#222'
+    
     // Initialise starting state
     creategrid()
     nextBlock = Math.floor(Math.random() * blocks.length)
     spawnBlock()
-
-    gridDiv.style.backgroundColor = options.mono
-      ? 'rgb(71, 17, 197)' : '#222'
-
     
     // Start movement
     gameTimer = setInterval(dropBlocks, 1000)
@@ -743,7 +742,7 @@ function init() {
 
   function loopMusic() {
 
-    if (gameoverScreen.style.display === 'block') return
+    if (frameTimer === null) return
       
     let player = null
 
@@ -778,7 +777,6 @@ function init() {
     })
 
     event.target.src = './images/tile_3.png'
-
   }
 
   function toggleOption(event) {
@@ -804,49 +802,33 @@ function init() {
   }
 
   function changeStyle() {
-    if (options.mono) {
-      gridDiv.style.backgroundColor = 'rgb(71, 17, 197)'
-      startScreen.style.backgroundColor = 'rgb(71, 17, 197)'
-      optionsScreen.style.backgroundColor = 'rgb(71, 17, 197)'
-      pauseScreen.style.backgroundColor = 'rgb(71, 17, 197)'
-      gameoverScreen.style.backgroundColor = 'rgb(71, 17, 197)'
 
-      const buttons = document.querySelectorAll('.button')
-      buttons.forEach(button => {
-        button.style.backgroundColor = 'rgb(230, 62, 154)'
-        button.style.color = 'rgb(40, 10, 121)'
-      })
+    const bgColor = options.mono ? 'rgb(71, 17, 197)' : '#222'
+    const buttonColor = options.mono ? 'rgb(230, 62, 154)' : '#222'
+    const buttonText = options.mono ? 'rgb(40, 10, 120)' : '#aaa'
+    const titleLogo = options.mono ? './images/mono/logo.png' : './images/logo.png'
+    
+    gridDiv.style.backgroundColor = bgColor
+    startScreen.style.backgroundColor = bgColor
+    optionsScreen.style.backgroundColor = bgColor
+    controlsScreen.style.backgroundColor = bgColor
+    pauseScreen.style.backgroundColor = bgColor
+    gameoverScreen.style.backgroundColor = bgColor
 
-      document.querySelector('#logo').src = './images/mono/logo.png'
-    } else {
-      
-      gridDiv.style.backgroundColor = '#222'
-      startScreen.style.backgroundColor = '#222'
-      optionsScreen.style.backgroundColor = '#222'
-      pauseScreen.style.backgroundColor = '#222'
-      gameoverScreen.style.backgroundColor = '#222'
-      
-      const buttons = document.querySelectorAll('.button')
-      buttons.forEach(button => {
-        button.style.backgroundColor = '#222'
-        button.style.color = '#aaa'
-      })
+    const buttons = document.querySelectorAll('.button')
+    buttons.forEach(button => {
+      button.style.backgroundColor = buttonColor
+      button.style.color = buttonText
+    })
 
-      document.querySelector('#logo').src = './images/logo.png'
-    }
+    document.querySelector('#logo').src = titleLogo
   }
 
-  
-  
   
   
 
   // Attach controls
   document.addEventListener('keydown', controlBlock)
-
-  document.querySelectorAll('.start').forEach(button => {
-    button.addEventListener('click', startGame)
-  })
 
   document.querySelectorAll('.button').forEach(button => {
     button.addEventListener('click', () => {
@@ -854,10 +836,17 @@ function init() {
       sfx.play()
     })
   })
+
+  document.querySelectorAll('.start').forEach(button => {
+    button.addEventListener('click', startGame)
+  })
   
-  document.querySelector('.menu').addEventListener('click', goToMenu)
+  document.querySelectorAll('.menu').forEach(button => {
+    button.addEventListener('click', goToMenu)
+  })
+  
   document.querySelector('#options').addEventListener('click', openOptions)
-  document.querySelector('#save-options').addEventListener('click', goToMenu)
+  document.querySelector('#controls').addEventListener('click', openControls)
 
   document.querySelectorAll('.toggle').forEach(button => {
     button.addEventListener('click', toggleOption)

@@ -10,8 +10,8 @@
     <title>Tetris</title>
 </head>
 <body>
-    <audio id='bgmA' volume='0.7'></audio>
-    <audio id='bgmB' volume='0.7'></audio>
+    <audio id='bgmA' volume='0.7' src='./sounds/eightBit1.wav'></audio>
+    <audio id='bgmB' volume='0.7' src='./sounds/eightBit1.wav'></audio>
     <audio id='sfx'></audio>
     <div class='game'>
         <div class='grid'></div>
@@ -104,10 +104,24 @@
             <p>OFF</p>
             <img class='radio-button' src="./images/tile_4.png" alt="radio graphic" data-music='off'>
         </div>
-        <button class='button' id='save-options'>SAVE</button>
+        <button class='button menu'>SAVE</button>
+    </div>
+    <div class='controls-screen'>
+        <h3>CONTROLS</h3>
+        <br>
+        <p>LEFT / RIGHT : MOVE BLOCK</p>
+        <p>Z / X : ROTATE BLOCK</p>
+        <p>DOWN : SPEED UP</p>
+        <p>UP : FAST DROP</p>
+        <p>SHIFT : HOLD BLOCK</p>
+        <p>ESCAPE : PAUSE</p>
+        <br>
+        <button class='button menu'>BACK</button>
     </div>
     <div class='pause-screen'>
         <h3>PAUSED</h3>
+        <br>
+        <button class='button menu'>QUIT</button>
     </div>
     <div class='gameover-screen'>
         <h3>GAME OVER</h3>

@@ -1,5 +1,5 @@
 body {
-    background-color: #010;
+    background-color: #011;
     font-family: 'Orbitron', sans-serif;
 }
 
@@ -11,6 +11,7 @@ body {
 }
 
 .options-screen,
+.controls-screen,
 .pause-screen,
 .gameover-screen {
     display: none;
