@@ -5,6 +5,7 @@ function init() {
   const startScreen = document.querySelector('.start-screen')
   const optionsScreen = document.querySelector('.options-screen')
   const controlsScreen = document.querySelector('.controls-screen')
+  const creditsScreen = document.querySelector('.credits-screen')
   const gameScreen = document.querySelector('.game')
   const pauseScreen = document.querySelector('.pause-screen')
   const gameoverScreen = document.querySelector('.gameover-screen')
@@ -115,7 +116,7 @@ function init() {
   let gameTimer
   let frameTimer
   let currentPlayer = 'a'
-  let loopTimer = 31900
+  let loopTimer = null
   let musicSpeed = 1
 
   // Options
@@ -571,10 +572,25 @@ function init() {
 
       // Shift all lines above
       const lastBlockInClearedLine = (completeLine + 1) * width - 1
-      for (let i = lastBlockInClearedLine ; i >= 0; i--) {
-        
-        grid[i] = grid[i - width] === undefined
-          ? new CellInfo() : grid[i - width]
+      for (let i = lastBlockInClearedLine; i >= 0; i--) {
+
+        // Do not shift falling blocks
+        if (grid[i].state === 1) continue
+
+        // Top row returns blank cells
+        if (grid[i - width] === undefined) {
+          grid[i] = new CellInfo()
+          continue
+        }
+
+        //  Do not shift falling blocks
+        if (grid[i - width].state === 1) {
+          grid[i] = new CellInfo()
+          continue
+        }
+
+        // Everything else
+        grid[i] = grid[i - width]
       }
 
       consecutiveLines++
@@ -585,9 +601,11 @@ function init() {
     } else {
 
       // Play line clear sound
-      const clearSFX = ['', './sounds/line_clear.ogg', './sounds/line_clear.ogg', './sounds/line_clear.ogg', './sounds/tetris.ogg']
-      sfx.src = clearSFX[consecutiveLines]
-      sfx.play()
+      if (consecutiveLines > 0) {
+        sfx.src = consecutiveLines === 4
+          ? './sounds/tetris.ogg' : './sounds/line_clear.ogg'
+        sfx.play()
+      }
       
       addScore()
       
@@ -620,9 +638,6 @@ function init() {
     const base = (level + 1) * 40
     const multiplier = [0, 1, 2.5, 7.5, 30][consecutiveLines]
 
-    console.log({ base })
-    console.log({ multiplier })
-
     score += base * multiplier
     scoreDisplay.innerHTML = score
   }
@@ -638,6 +653,11 @@ function init() {
   function openControls() {
     startScreen.style.display = 'none'
     controlsScreen.style.display = 'block'
+  }
+
+  function openCredits() {
+    startScreen.style.display = 'none'
+    creditsScreen.style.display = 'block'
   }
 
   function pauseGame() {
@@ -709,6 +729,7 @@ function init() {
     optionsScreen.style.display = 'none'
     pauseScreen.style.display = 'none'
     controlsScreen.style.display = 'none'
+    creditsScreen.style.display = 'none'
   }
 
   function startGame() {
@@ -718,6 +739,9 @@ function init() {
     gameScreen.style.display = 'block'
 
     // Initialise options
+
+    loopTimer = music[options.music]
+
     if (options.music !== 'off') {
       setTimeout(loopMusic, 500)
     }
@@ -844,9 +868,10 @@ function init() {
   document.querySelectorAll('.menu').forEach(button => {
     button.addEventListener('click', goToMenu)
   })
-  
+
   document.querySelector('#options').addEventListener('click', openOptions)
   document.querySelector('#controls').addEventListener('click', openControls)
+  document.querySelector('#credits').addEventListener('click', openCredits)
 
   document.querySelectorAll('.toggle').forEach(button => {
     button.addEventListener('click', toggleOption)

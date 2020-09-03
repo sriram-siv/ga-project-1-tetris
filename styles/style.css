@@ -8,10 +8,12 @@ body {
     width: 48vh;
     height: 96vh;
     background-color: #222;
+    outline: 1px solid white;
 }
 
 .options-screen,
 .controls-screen,
+.credits-screen,
 .pause-screen,
 .gameover-screen {
     display: none;
@@ -22,6 +24,7 @@ body {
     text-align: center;
     background-color: #222;
     color: white;
+    outline: 1px solid white;
 }
 
 #logo {
@@ -53,13 +56,14 @@ body {
     flex-wrap: wrap;
     width: 48vh;
     margin: auto;
+    outline: 1px solid white;
 }
 
-.cell {
+.cell,
+.preview-cell,
+.hold-cell {
     width: 4.8vh;
     height: 4.8vh;
-    /* background-color: #222; */
-    /* box-shadow: 2px 2px #222 inset; */
 }
 
 .info {
@@ -77,30 +81,14 @@ body {
     height: 19.2vh;
 }
 
-.preview-cell, .hold-cell {
-    width: 4.8vh;
-    height: 4.8vh;
-}
-
-.toggle p {
-    margin: 0;
-    position: relative;
-    left: -20px;
-}
-
-.toggle img {
-    width: 20px;
-    position: relative;
-    top: -20px;
-    left: 40px;
-}
-
+.toggle p,
 .radio-div p {
     margin: 0;
     position: relative;
     left: -20px;
 }
 
+.toggle img,
 .radio-button {
     width: 20px;
     position: relative;
@@ -108,8 +96,11 @@ body {
     left: 40px;
 }
 
-.test {
-    color: rgb(230, 62, 154);
-    color: rgb(71, 17, 197);
-    color: rgb(43, 10, 121);
+.window {
+    outline: 1px solid white;
+    width: 19.2vh;
+    height: 19.2vh;
+
+    position: absolute;
+    top: 225px;
 }
