@@ -11,6 +11,7 @@ function init() {
   const gameoverScreen = document.querySelector('.gameover-screen')
 
   const gridDiv = document.querySelector('.grid')
+  let displayCells = []
   const previewWindow = document.querySelector('.preview')
   const previewCells = document.querySelectorAll('.preview-cell')
   const holdWindow = document.querySelector('.hold')
@@ -99,7 +100,7 @@ function init() {
 
   // const colors = [ 'Yellow', 'Orange', 'DodgerBlue', 'LimeGreen', 'Red', 'MediumPurple', 'DarkTurquoise' ]
 
-  const speeds = [1000, 800, 620, 480, 360, 270, 210, 160, 130, 110]
+  const speeds = [1000, 800, 650, 540, 440, 350, 270, 200, 140, 90, 80]
 
   let nextBlock = null
   let activeBlock = null
@@ -121,7 +122,7 @@ function init() {
 
   // Options
 
-  let options = {
+  const options = {
     sfx: true,
     ghost: true,
     mono: false,
@@ -177,12 +178,13 @@ function init() {
 
       // Create cell for display in flex-box
       // Except for the first line which remains off screen
+      const cell = document.createElement('div')
       if (i >= width) {
-        const cell = document.createElement('div')
         cell.classList.add('cell')
         cell.setAttribute('data-id', i)
         gridDiv.appendChild(cell)
       }
+      displayCells.push(cell)
     }
   }
 
@@ -546,10 +548,29 @@ function init() {
       })
 
       // Clear completed lines
+      flash()
       setTimeout(clearLines, 200)
 
       // Generate new block
       spawnBlock()
+    }
+  }
+
+  function flash() {
+
+    displayCells.forEach(cell => cell.classList.remove('flash'))
+
+    // Find all completed lines
+    for (let i = 0; i < height; i++) {
+      const line = grid.slice(i * width, (i + 1 ) * width)
+
+      if (line.every(cell => cell.state === 2)) {
+        // Apply animation class
+        for (let j = 0; j < width; j++) {
+          const displayCell = displayCells[i * width + j]
+          displayCell.classList.add('flash')
+        }
+      }
     }
   }
 
@@ -619,10 +640,10 @@ function init() {
   
         if (lines % 10 === 0) {
           
-          level = Math.min(9, level + 1)
+          level = Math.min(speeds.length - 1, level + 1)
           levelDisplay.innerHTML = level
         
-          if (lines <= 100) { // Max level
+          if (lines <= speeds.length * 10) {
             loopTimer /= 1.03
             musicSpeed *= 1.03
           }
@@ -714,6 +735,8 @@ function init() {
       if (cell) cell.remove()
     }
 
+    displayCells = []
+
     clearPreviews()
     clearInterval(gameTimer)
     clearInterval(frameTimer)
@@ -734,6 +757,11 @@ function init() {
     pauseScreen.style.display = 'none'
     controlsScreen.style.display = 'none'
     creditsScreen.style.display = 'none'
+  }
+
+  // Reload page so that music loop is killed
+  function restartGame() {
+    location.reload()
   }
 
   function startGame() {
@@ -842,6 +870,7 @@ function init() {
     startScreen.style.backgroundColor = bgColor
     optionsScreen.style.backgroundColor = bgColor
     controlsScreen.style.backgroundColor = bgColor
+    creditsScreen.style.backgroundColor = bgColor
     pauseScreen.style.backgroundColor = bgColor
     gameoverScreen.style.backgroundColor = bgColor
 
@@ -892,6 +921,11 @@ function init() {
         }
       })
 
+      if (localStorage.restart) {
+        startGame()
+        localStorage.removeItem('restart')
+      }
+
     }
   }
 
@@ -920,6 +954,10 @@ function init() {
     button.addEventListener('click', goToMenu)
   })
 
+  document.querySelectorAll('.restart').forEach(button => {
+    button.addEventListener('click', restartGame)
+  })
+
   document.querySelector('#options').addEventListener('click', openOptions)
   document.querySelector('#controls').addEventListener('click', openControls)
   document.querySelector('#credits').addEventListener('click', openCredits)
@@ -933,7 +971,6 @@ function init() {
   })
 
   loadOptions()
-  
 }
 
 window.addEventListener('DOMContentLoaded', init)

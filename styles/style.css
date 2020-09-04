@@ -124,3 +124,18 @@ body {
 .level-display {
     margin-bottom: 50px;
 }
+
+.flash {
+    animation: flash 200ms;
+}
+
+@keyframes flash
+{
+    0% {
+        background: white;
+    }
+
+    100% {
+        background: none;
+    }
+}
