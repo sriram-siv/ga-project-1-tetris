@@ -79,16 +79,17 @@ body {
     flex-wrap: wrap;
     width: 19.2vh;
     height: 19.2vh;
+    position: relative;
 }
 
-.toggle p,
+.toggle-div p,
 .radio-div p {
     margin: 0;
     position: relative;
     left: -20px;
 }
 
-.toggle img,
+.toggle-button,
 .radio-button {
     width: 20px;
     position: relative;
@@ -96,11 +97,30 @@ body {
     left: 40px;
 }
 
-.window {
+.window-1 {
     outline: 1px solid white;
     width: 19.2vh;
     height: 19.2vh;
 
     position: absolute;
-    top: 225px;
+    top: 200px;
+
+    background-color: #000a0a;
+    z-index: -1;
+}
+
+.window-2 {
+    outline: 1px solid white;
+    width: 19.2vh;
+    height: 19.2vh;
+
+    position: absolute;
+    top: calc(19.2vh + 280px);
+
+    background-color: #000a0a;
+    z-index: -1;
+}
+
+.level-display {
+    margin-bottom: 50px;
 }

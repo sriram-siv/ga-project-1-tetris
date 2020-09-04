@@ -121,7 +121,7 @@ function init() {
 
   // Options
 
-  const options = {
+  let options = {
     sfx: true,
     ghost: true,
     mono: false,
@@ -291,7 +291,11 @@ function init() {
 
     // Get block width and create a centering value for the preview window
     const blockSize = blocks[block].length
-    window.style.marginLeft = blockSize === 4 ? '' : '2.4vh'
+    const padding = blockSize === 4
+      ? '' : blockSize === 3
+        ? '2.4vh' : '3.6vh'
+    window.style.left = padding
+    window.style.top = padding
 
     // Get tile
     const tilePath = options.mono
@@ -801,11 +805,11 @@ function init() {
     })
 
     event.target.src = './images/tile_3.png'
+
+    saveOptions()
   }
 
   function toggleOption(event) {
-
-    if (event.target.nodeName !== 'IMG') return
     
     const optionName = event.target.getAttribute('data-option')
     
@@ -823,6 +827,8 @@ function init() {
 
     sfx.src = './sounds/lock.ogg'
     sfx.play()
+
+    saveOptions()
   }
 
   function changeStyle() {
@@ -848,8 +854,53 @@ function init() {
     document.querySelector('#logo').src = titleLogo
   }
 
-  
-  
+  function loadOptions() {
+    if (localStorage.sfx !== undefined) {
+      options.sfx = localStorage.sfx
+      options.ghost = localStorage.ghost
+      options.mono = localStorage.mono
+      options.music = localStorage.music
+
+      // Convert back to boolean
+      Object.keys(options).forEach(key => {
+        if (options[key] === 'true') {
+          options[key] = true
+        }
+        if (options[key] === 'false') {
+          options[key] = false
+        }
+      })
+
+      if (options.mono) changeStyle()
+
+      if (!options.sfx) sfx.volume = 0
+
+      document.querySelectorAll('.radio-button').forEach(button => {
+        button.src = './images/tile_4.png'
+        
+        if (options.music === button.getAttribute('data-music')) {
+          button.src = './images/tile_3.png'
+        }
+      })
+
+      document.querySelectorAll('.toggle-button').forEach(button => {
+        const optionName = button.getAttribute('data-option')
+        button.src = './images/tile_4.png'
+        
+        if (options[optionName]) {
+          button.src = './images/tile_3.png'
+        }
+      })
+
+    }
+  }
+
+  function saveOptions() {
+    localStorage.setItem('sfx', options.sfx)
+    localStorage.setItem('ghost', options.ghost)
+    localStorage.setItem('mono', options.mono)
+    localStorage.setItem('music', options.music)
+  } 
 
   // Attach controls
   document.addEventListener('keydown', controlBlock)
@@ -873,13 +924,15 @@ function init() {
   document.querySelector('#controls').addEventListener('click', openControls)
   document.querySelector('#credits').addEventListener('click', openCredits)
 
-  document.querySelectorAll('.toggle').forEach(button => {
+  document.querySelectorAll('.toggle-button').forEach(button => {
     button.addEventListener('click', toggleOption)
   })
 
   document.querySelectorAll('.radio-button').forEach(button => {
     button.addEventListener('click', radioOption)
   })
+
+  loadOptions()
   
 }
 
