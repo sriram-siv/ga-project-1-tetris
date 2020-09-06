@@ -12,6 +12,7 @@ function init() {
 
   const gridDiv = document.querySelector('.grid')
   let displayCells = []
+  let glowCells = []
   const previewWindow = document.querySelector('.preview')
   const previewCells = document.querySelectorAll('.preview-cell')
   const holdWindow = document.querySelector('.hold')
@@ -185,6 +186,15 @@ function init() {
         gridDiv.appendChild(cell)
       }
       displayCells.push(cell)
+
+      const glowGrid = document.querySelector('.glow')
+      const glowCell = document.createElement('div')
+      glowCells.push(glowCell)
+      if (i >= width) {
+        // glowCell.setAttribute('data-glow', i)
+        glowCell.classList.add('glow-cell')
+        glowGrid.appendChild(glowCell)
+      }
     }
   }
 
@@ -196,6 +206,7 @@ function init() {
 
       const cell = document.querySelector(`[data-id='${i}']`)
       cell.style.background = ''
+      glowCells[i].style.boxShadow = ''
 
       if (grid[i].state > 0) {
 
@@ -208,6 +219,9 @@ function init() {
         cell.style.background = `url(${tilePath})`
         cell.style.backgroundSize = 'cover'
 
+        // Draw glow
+        glowCells[i].style.boxShadow = options.mono
+          ? '0 0 8px pink' : '0 0 8px white'
       }
     }
 
@@ -569,6 +583,8 @@ function init() {
         for (let j = 0; j < width; j++) {
           const displayCell = displayCells[i * width + j]
           displayCell.classList.add('flash')
+
+          glowCells[i * width + j].style.backgroundColor = 'white'
         }
       }
     }
@@ -656,6 +672,8 @@ function init() {
 
       // Reset
       consecutiveLines = 0
+
+      glowCells.forEach(cell => cell.style.backgroundColor = '')
     }
   }
 

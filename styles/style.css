@@ -59,11 +59,35 @@ body {
     outline: 1px solid white;
 }
 
+.glow {
+    display: flex;
+    flex-wrap: wrap;
+
+    position: absolute;
+    left: calc(50vw - 24vh);
+    width: 48vh;
+    height: 96vh;
+    margin: auto;
+
+    /* background-color: blueviolet;
+    opacity: 0.2; */
+}
+
+.glow-cell {
+    width: 4.8vh;
+    height: 4.8vh;
+    opacity: 0.6;
+}
+
 .cell,
 .preview-cell,
 .hold-cell {
     width: 4.8vh;
     height: 4.8vh;
+
+    z-index: 1;
+
+    /* box-shadow: 0 0 3px 1px white; */
 }
 
 .info {
