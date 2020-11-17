@@ -1,3 +1,4 @@
+<div style="text-align: center">
 # GA PROJECT 1: TETRIS
 
 ### BRIEF
@@ -172,8 +173,7 @@ This would be a simple fix, with the controls checking for key down and key up, 
 
 As for structural improvements to the code, there was one issue that caused a lot of issues throughout the development of the game. The game board array is a single  simple array with indexes from 0 - 99 whereas many other parts of the game use a system of 2D (nested) arrays. This means that a lot of conversions are used all over the program. I think a quick improvement for this would have been to write a conversion function rather than writing something specific each time it was needed.
 I  also had a lot of trouble working with arrays and issues of mutability; I have since gained an improved understanding of how this works in general so would think that I could improve the code in all the areas where this was an issue.
-
-
+</div>
 
 
 
