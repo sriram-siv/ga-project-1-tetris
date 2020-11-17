@@ -1,4 +1,3 @@
-<div style="text-align: center">
 # GA PROJECT 1: TETRIS
 
 ### BRIEF
@@ -9,7 +8,7 @@ Create a simple front-end application in the style of a classic computer game, u
 
 7 days.
 
-![](README/logo%202.png)
+![](README/logo%203.png)
 
 ### OVERVIEW
 
@@ -36,29 +35,40 @@ For example, the function for clearing lines and moving all higher lines down wa
 
 The other major element to the game was the actual blocks or tetrominoes as they are known; 7 in total representing all the ways in which 4 single blocks can be attached together.
 
-![](README/TetrisRM_1%202.png)
+![](README/tetrominoes.png)
 
-These would be represented as 2-dimensional arrays with the same system of 1 and 0 for filled or empty space. They could then be spawned onto the grid by randomly selecting one of the set and drawing each individual block to the grid. 
+These would be represented as 2-dimensional arrays with the same system of 1 and 0 for filled or empty space. They could then be spawned onto the grid by randomly selecting one of the set and drawing each individual block to the grid.
+
 The blocks are instantiated from a simple Cell class. This contains two properties - the state and the tile colour. Upon spawning a new block the colour would be set according to the Tetromino type (as shown above) which then allowed for consistently drawing the different coloured blocks. This was a major addition as having the distinct colours not only gives the game a visual boost but also allows the player to quickly recognise the blocks by the colour as well as the shape.
 
 #### CONTROLS
 
 The basic controls of the game were horizontal movement and rotation. The movement was effected by shift all of the cells in a falling Tetromino along the array by 1 or -1. I had to do a series of boolean checks to see if the move was valid; if any of the blocks were in the 10th column a move to the right was not allowed and similarly any blocks in the 1st column could not move left. I was able to check for this by testing if the original position was divisible by 10 or had a remainder of 9. I could also check for the presence of another block by simply checking the value of the destination cell.
 
-example here
+In the code below the loop checks every cell for the presence of a falling block (state: 1). The first condition checks for a block along the left side and the second checks for a resting block to the left. In the final code, this checks for both left and right using some initial variables set according to the key press.
+
+```javascript
+for (let i = 0; i < grid.length; i++) {
+      if (grid[i].state === 1 && i % width === 0) {
+        move = false
+      }
+      if (grid[i].state === 1 && grid[i - 1].state === 2) {
+        move = false
+      }
+    }
+```
 
  Rotation was a bit more complex. For starters there is the question of how a Tetromino rotates. Most of the pieces are not completely symmetrical and so a point of rotation is not obvious. I did some research and found the intended rotational behaviour and set about implementing it.
 
 My first approach was to create an array of values that gave the correct x and y axis shift for each block rotation. The rotated block would then be redrawn to the grid relative to its original position using these coordinates.
 This approached failed due to the fact that some rotations were around single blocks and others were around the nexus of four blocks.
 
- image here to explain
+![](README/block-arrays.png)
 
- split the above image to use it here instead
-The solution that I ended up with was to represent the Tetrominoes as square arrays, regardless of their actual shape. This way the rotation becomes automatic due to how the piece is placed within the square.
+The solution that I ended up with was to represent the Tetrominoes as square arrays, regardless of their actual shape (see above). This way the rotation becomes automatic due to how the piece is placed within the square. The image below shows a J Tetromino rotating around its central block.
 
 
-![](README/rotation%202.gif)
+![](README/rotation%203.gif)
 
 
 The rotation of the pieces is handled by a function that takes in a 2D array and returns a copy that is rotated by 90degrees.
@@ -81,12 +91,7 @@ function rotateArray(array, direction = 1) {
 }
 ```
 
-remove this to somewhere else
-Player movement was another place in which the 1 dimensional array caused a lot of fiddly code with multiple modulus checks.
-This is the major thing that I would change if I were to revise the code. I think that a good workaround could have been to have a conversion function that allowed for switching between indexing on 1D and 2D arrays.
-This is essentially what I did but because I didn’t turn it into a standalone function, the process often got in the way of code readability.
-
-### MANAGING TIMERS
+#### MANAGING TIMERS
 
 The main function for moving the blocks down the screen is called using an interval, which can be reduced in length every time a new level is reached.
 
@@ -94,15 +99,11 @@ Another timer is needed for rendering the game to the screen. This one runs at 6
 
 A third timer is used for looping the music. The standard behaviour for looping music in HTML5 leaves a small gap in between the loops; this would take the player out of the game and just sound bad in general. I found a workaround to this by playing music through two different audio sources. When one source finished playing the music track the second one would start playing immediately thereby eliminating the loading delay. When changing the music, the music loop would also have its timer set according to the length of the track.
 
- code here
-
 #### CLEARING LINES
 
 Clearing completed lines is achieved via a function that runs every time a block hits the ground. The basic principle is to see whether a whole section (10 indexes) of the board array (from any index divisible by 10) has a state of 2 (representing resting blocks).
 
 My first implementation did this as a single process. It would find all completed lines and delete them, then drop the blocks on lines above down into the empty space. This had a bug which resulted in floating blocks when multiple lines were cleared. I fixed this by keeping track of how many lines were cleared. Successive lines would then drop by an increasing amount of lines. This worked but it ended up being very messy code.
-
- image of floating lines here
 
 This was my first opportunity to solve a real problem using recursion. The function now only clears the first complete line that it identifies and then calls itself again. The consecutive lines are still recorded for scoring but the code is much more readable and clean than the original implementation.
 
@@ -134,20 +135,34 @@ function clearLines() {
 
 At this point the line clearing was totally function but it did not feel right when playing the game. Upon completing a line, it would instantaneously disappear. This was a problem because the audio / visual feedback in a game is really important to creating good game feel.
 
-image of diff delays
-
 I put a small (200ms) delay on the line clear function call and created another function to be called immediately that would trigger a flash effect. It would use the same logic to find all completed lines and then apply a flash animation to them. This lasts for the same length as the delay and doesn’t interfere with the timing of the game at all - a new block will spawn at the same speed regardless of a line clear.
+
+![](README/line-clear.gif)
 
 #### DROP SHADOWS
 
 The experience with recursion turned out to be useful further along the project when I implemented the ‘drop shadow’ feature. This is a projection of where the block will fall and allows for faster gameplay.
 
-![](README/drop-shadow%202.png)
+![](README/drop-shadow%203.png)
 
 This feature took a little while to get right, but iI ended up with quite readable code due to the use of recursion. The function checks if the space below is free and if so calls itself recursively and passes along a counter that keeps track of how many spaces have been checked.
 If the check fails, the function draws a shadow below the block using the counter to decide the distance.
 
- code here
+```javascript
+function findGhost(drop) {
+    let valid = true
+    grid.forEach((cell, index) => {
+		// Find cells that contain falling blocks then check the cell 'drop value' rows down is empty
+      if (cell.state !== 1) return
+      const landingCell = grid[index + (drop * width)]
+      if (landingCell === undefined || landingCell.state > 1) {
+        valid = false
+      }
+    })
+		// Return the final drop distance or call recursively
+    return valid ? findGhost(drop + 1) : drop - 1
+  }
+```
 
 #### STORING AND PREVIEWING BLOCKS
 
@@ -155,6 +170,10 @@ Another extra feature that I was really excited to add was the ability to switch
 The preview was achieved by spawning blocks into a new variable (nextBlock) rather than directly to the game board. When the game needed a new block, this one would simply be drawn to the screen and then another random block generated for the preview.
 
 The holding block works in a similar way, except that it is generated by the player pressing shift. This swaps the block in play with the holding block or generates a new block to the game board if there is no holding block yet.
+
+You can see this behaviour below where the hold block exchanges with the falling block or triggers the next block to spawn if nothing is being held.
+
+![](README/hold-block.gif)
 
 These extra features (along with the drop shadow) really make a huge difference to the feel of the game; they allow a player to make strategic decisions and add to the complexity of the game. Once they were added I felt that the game went from feeling like a tech demo to something that felt real and interesting to play, which I am very proud of.
 
@@ -173,7 +192,8 @@ This would be a simple fix, with the controls checking for key down and key up, 
 
 As for structural improvements to the code, there was one issue that caused a lot of issues throughout the development of the game. The game board array is a single  simple array with indexes from 0 - 99 whereas many other parts of the game use a system of 2D (nested) arrays. This means that a lot of conversions are used all over the program. I think a quick improvement for this would have been to write a conversion function rather than writing something specific each time it was needed.
 I  also had a lot of trouble working with arrays and issues of mutability; I have since gained an improved understanding of how this works in general so would think that I could improve the code in all the areas where this was an issue.
-</div>
+
+
 
 
 
