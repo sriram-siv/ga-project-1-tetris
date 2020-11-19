@@ -8,13 +8,19 @@ Create a simple front-end application in the style of a classic computer game, u
 
 7 days.
 
-![](README/logo%203.png)
+### TECHNOLOGIES
+
+* HTML
+* CSS
+* JavaScript (ES6)
+
+![](README/logo%204.png)
 
 ### OVERVIEW
 
-I decided on Tetris as my game to remake in the browser as I was aware that it was one of the more challenging games to make and was excited to try my hand at implementing the array manipulation and collision detection that I knew would be tricky to get right.
+I decided on Tetris as my game to remake in the browser as I was aware that it was one of the more challenging games to make and was excited to try my hand at implementing the array manipulation and collision detection.
 
-Having played a lot of Tetris I was quite familiar with the mechanics as well as the additional features that could be included on top of the base experience. The final product included visual and audio theming, block storing, preview windows, drop shadows and levels with speed increases.
+Having played a lot of Tetris I was quite familiar with the mechanics as well as the additional features that could be included. The final product included visual and audio theming, block storing, preview windows, drop shadows and levels with speed increases.
 
 ### PROCESS
 
@@ -35,7 +41,7 @@ For example, the function for clearing lines and moving all higher lines down wa
 
 The other major element to the game was the actual blocks or tetrominoes as they are known; 7 in total representing all the ways in which 4 single blocks can be attached together.
 
-![](README/tetrominoes.png)
+![](README/tetrominoes%202.png)
 
 These would be represented as 2-dimensional arrays with the same system of 1 and 0 for filled or empty space. They could then be spawned onto the grid by randomly selecting one of the set and drawing each individual block to the grid.
 
@@ -63,12 +69,12 @@ for (let i = 0; i < grid.length; i++) {
 My first approach was to create an array of values that gave the correct x and y axis shift for each block rotation. The rotated block would then be redrawn to the grid relative to its original position using these coordinates.
 This approached failed due to the fact that some rotations were around single blocks and others were around the nexus of four blocks.
 
-![](README/block-arrays.png)
+![](README/block-arrays%202.png)
 
 The solution that I ended up with was to represent the Tetrominoes as square arrays, regardless of their actual shape (see above). This way the rotation becomes automatic due to how the piece is placed within the square. The image below shows a J Tetromino rotating around its central block.
 
 
-![](README/rotation%203.gif)
+![](README/rotation%204.gif)
 
 
 The rotation of the pieces is handled by a function that takes in a 2D array and returns a copy that is rotated by 90degrees.
@@ -107,7 +113,7 @@ My first implementation did this as a single process. It would find all complete
 
 This was my first opportunity to solve a real problem using recursion. The function now only clears the first complete line that it identifies and then calls itself again. The consecutive lines are still recorded for scoring but the code is much more readable and clean than the original implementation.
 
-If the function finds no complete lines it runs the code block for adding to the score and resets the lines cleared variable. The score is calculated using the equation from the original game that is document on CodeWars as a challenge to recreate. It uses the level and the consecutive line clears as multipliers to a base value. 
+If the function finds no complete lines it runs the code block for adding to the score and resets the lines cleared variable. The score is calculated using the equation from the original game that is documented on CodeWars as a challenge to recreate. It uses the level and the consecutive line clears as multipliers to a base value. 
 
 ```javascript
 function clearLines() {
@@ -133,19 +139,19 @@ function clearLines() {
   }
 ```
 
-At this point the line clearing was totally function but it did not feel right when playing the game. Upon completing a line, it would instantaneously disappear. This was a problem because the audio / visual feedback in a game is really important to creating good game feel.
+At this point the line clearing was totally functional but it did not feel right when playing the game. Upon completing a line, it would instantaneously disappear. This was a problem because the audio / visual feedback in a game is really important to creating good game feel.
 
 I put a small (200ms) delay on the line clear function call and created another function to be called immediately that would trigger a flash effect. It would use the same logic to find all completed lines and then apply a flash animation to them. This lasts for the same length as the delay and doesn’t interfere with the timing of the game at all - a new block will spawn at the same speed regardless of a line clear.
 
-![](README/line-clear.gif)
+![](README/line-clear%202.gif)
 
 #### DROP SHADOWS
 
 The experience with recursion turned out to be useful further along the project when I implemented the ‘drop shadow’ feature. This is a projection of where the block will fall and allows for faster gameplay.
 
-![](README/drop-shadow%203.png)
+![](README/drop-shadow%204.png)
 
-This feature took a little while to get right, but iI ended up with quite readable code due to the use of recursion. The function checks if the space below is free and if so calls itself recursively and passes along a counter that keeps track of how many spaces have been checked.
+The function checks if the space below is free and if so calls itself recursively and passes along a counter that keeps track of how many spaces have been checked.
 If the check fails, the function draws a shadow below the block using the counter to decide the distance.
 
 ```javascript
@@ -173,31 +179,18 @@ The holding block works in a similar way, except that it is generated by the pla
 
 You can see this behaviour below where the hold block exchanges with the falling block or triggers the next block to spawn if nothing is being held.
 
-![](README/hold-block.gif)
+![](README/hold-block%202.gif)
 
-These extra features (along with the drop shadow) really make a huge difference to the feel of the game; they allow a player to make strategic decisions and add to the complexity of the game. Once they were added I felt that the game went from feeling like a tech demo to something that felt real and interesting to play, which I am very proud of.
+### CONCLUSION & KEY LEARNING
 
-#### FINAL PRESENTATION
+I learnt a lot during this project about the importance of presentation and providing the user with feedback to their actions. A lot of my time was spent fine tuning all of the audio and visual details and I believe that it really paid off in the final product, with with my favourite features being the glow effect on the bricks and the line clearance animation.
 
-A significant amount of time went into the presentation of the game once it was fully functional. I looped the music and had it increase in tempo as the game progressed, which was gave the feeling of being in the zone whilst playing. Another big win on this front was the ‘glow’ effect of the blocks as well as the simple animation upon line-clearance where the line would flash.  Along with the sound effects, these additions really gave a great gameplay feeling.
-
-I also spent some time choosing alternative music and colour schemes in order to create an options menu, again to make the game feel more fleshed out and interactive. Finally, I created a title screen and credits.
+The extra features (drop shadows, previews and holding) made a huge difference once they were added. I think that giving the user more options for interaction greatly improves the experience and is something that I will be implementing in future projects.
 
 ### FUTURE IMPROVEMENTS
 
-Looking back at the project there are a few things which I either did not get the time to implement or that I would change about it using the knowledge I have gained since then.
+Two features which I was disappointed not to have included at the time were a hi-scores leaderboard and changing the speed at which key presses are registered, to allow for faster gameplay.
 
-Two features which I was disappointed not to have included at the time were a simple hi-scores leaderboard and also changing the speed at which key presses are registered, to allow for faster gameplay.
-This would be a simple fix, with the controls checking for key down and key up, then calling the movement function for the duration between at whatever rate I wanted.
+ The game board array is a single  simple array with indexes from 0 - 99 whereas many other parts of the game use a system of 2D (nested) arrays. This means that a lot of conversions are used all over the program. I think a quick improvement for this would have been to write a conversion function rather than writing something specific each time it was needed.
 
-As for structural improvements to the code, there was one issue that caused a lot of issues throughout the development of the game. The game board array is a single  simple array with indexes from 0 - 99 whereas many other parts of the game use a system of 2D (nested) arrays. This means that a lot of conversions are used all over the program. I think a quick improvement for this would have been to write a conversion function rather than writing something specific each time it was needed.
 I  also had a lot of trouble working with arrays and issues of mutability; I have since gained an improved understanding of how this works in general so would think that I could improve the code in all the areas where this was an issue.
-
-
-
-
-
-
-
-
-
